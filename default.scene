@@ -5,6 +5,7 @@ node
             parent = ROOT
             position = 0.000000 -10.000000 20.000000
             light = default
+            script = scripts/Main.py
         camera
             parent = ROOT
             position = -4.496509 -12.076803 14.725996

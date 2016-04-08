@@ -1,6 +1,7 @@
 
 from pymjin2 import *
 
+MAIN_FILTER_NAME = "filter";
 MAIN_SOUND_START = "soundBuffer.default.start"
 
 class MainImpl(object):
@@ -15,17 +16,17 @@ class MainImpl(object):
         self.isStarted = True
         print "Start the game"
         self.c.set("$SNDSTART.state", "play")
-        #self.c.set("$BALL.$SCENE.$BALL.moving", "1")
+        self.c.set("filter.$SCENE.$FILTER.reset", "1")
 
 class Main(object):
     def __init__(self, sceneName, nodeName, env):
         self.c = EnvironmentClient(env, "Main")
         self.impl = MainImpl(self.c)
         self.c.setConst("SCENE",    sceneName)
-        #self.c.setConst("BALL",     MAIN_BALL_NAME)
+        self.c.setConst("FILTER",   MAIN_FILTER_NAME)
         self.c.setConst("SNDSTART", MAIN_SOUND_START)
         self.c.listen("input.SPACE.key", "1", self.impl.onStart)
-        #self.c.listen("$BALL.$SCENE.$BALL.moving", "0", self.impl.onBallStopped)
+        #self.c.listen("filter.$SCENE.$BALL.moving", "0", self.impl.onBallStopped)
     def __del__(self):
         # Tear down.
         self.c.clear()

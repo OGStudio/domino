@@ -99,22 +99,18 @@ node
             material = tile0202
             model = models/tile.osgt
             selectable = 1
-        plate3
+        filter
             parent = ROOT
             material = plate3
             model = models/plate3.osgt
+            script = scripts/Filter.py
         plate3leaf1
-            parent = plate3
+            parent = filter
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
-        tile7
-            parent = plate3leaf1
-            material = tile0101
-            model = models/tile.osgt
-            selectable = 1
         plate3parent1
-            parent = plate3
+            parent = filter
             rotation = 0.000000 0.000000 120.000000
         plate3leaf2
             parent = plate3parent1
@@ -123,7 +119,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate3parent2
-            parent = plate3
+            parent = filter
             rotation = 0.000000 0.000000 240.000000
             selectable = 1
         plate3leaf3

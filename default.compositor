@@ -1,0 +1,28 @@
+template
+    main
+        texture = textureTemplate
+material
+    main
+        ball
+            diffuse = pipeline/textures/ball_tex.png
+            normal = pipeline/textures/ball_n.png
+        plateLeaf
+            normal = pipeline/textures/plate_leaf_n.png
+        plate3
+            normal = pipeline/textures/plate3_n.png
+        plate6
+            normal = pipeline/textures/plate6_n.png
+        plate10
+            normal = pipeline/textures/plate10_n.png
+        tile0000
+            diffuse = pipeline/textures/tile_tex0000.png
+            normal = pipeline/textures/tile_n.png
+        tile0101
+            diffuse = pipeline/textures/tile_tex0101.png
+            normal = pipeline/textures/tile_n.png
+        tile0202
+            diffuse = pipeline/textures/tile_tex0202.png
+            normal = pipeline/textures/tile_n.png
+        tile0303
+            diffuse = pipeline/textures/tile_tex0303.png
+            normal = pipeline/textures/tile_n.png

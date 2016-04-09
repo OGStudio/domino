@@ -1,18 +1,22 @@
 
 from pymjin2 import *
 
-#BALL_ROTATE_ACTION = "rotate.default.rotateBall"
+FILTER_LEAF_NAME        = "filterLeaf1"
+FILTER_LEAF_NAME_PREFIX = "filterLeaf"
+FILTER_TILE_FACTORY     = "tileFactory"
 
 class FilterImpl(object):
     def __init__(self, c):
         self.c = c
+        self.filterName = None
     def __del__(self):
         self.c = None
-#    def onStopped(self, key, value):
-#        self.c.report("$BALL.$SCENE.$BALL.moving", "0")
     def setReset(self, key, value):
-        print "setReset", key, value
-        #self.c.set("$ROTATE.$SCENE.$BALL.active", "1")
+        # Create 1 filter tile.
+        self.filterName = self.c.get("$TF.newTile")[0]
+        # Change parent to the first tile leaf.
+        self.c.setConst("TILE", self.filterName)
+        self.c.set("node.$SCENE.$TILE.parent", FILTER_LEAF_NAME)
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):
@@ -20,9 +24,8 @@ class Filter(object):
         self.impl = FilterImpl(self.c)
         self.c.setConst("SCENE", sceneName)
         self.c.setConst("NODE",  nodeName)
-        #self.c.setConst("ROTATE", BALL_ROTATE_ACTION)
-        self.c.provide("filter.$SCENE.$NODE.reset", self.impl.setReset)
-        #self.c.listen("$ROTATE.$SCENE.$BALL.active", "0", self.impl.onStopped)
+        self.c.setConst("TF",    FILTER_TILE_FACTORY)
+        self.c.provide("filter.reset", self.impl.setReset)
     def __del__(self):
         # Tear down.
         self.c.clear()

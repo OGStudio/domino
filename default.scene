@@ -11,100 +11,72 @@ node
             position = -4.496509 -12.076803 14.725996
             rotation = 44.299873 0.000000 -20.799944
             script = scripts/CameraSync.py
-        plate6
+        source
             parent = ROOT
             position = -4.500000 0.000000 2.000000
             material = plate6
             model = models/plate6.osgt
-        plate6leaf1
-            parent = plate6
+            script = scripts/Source.py
+        sourceLeaf1
+            parent = source
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
-        tile1
-            parent = plate6leaf1
-            material = tile0000
-            model = models/tile.osgt
         plate6parent1
-            parent = plate6
+            parent = source
             rotation = 0.000000 0.000000 60.000000
-        plate6leaf2
+        sourceLeaf2
             parent = plate6parent1
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
             selectable = 1
-        tile2
-            parent = plate6leaf2
-            material = tile0101
-            model = models/tile.osgt
-            selectable = 1
         plate6parent2
-            parent = plate6
+            parent = source
             rotation = 0.000000 0.000000 120.000000
             selectable = 1
-        plate6leaf3
+        sourceLeaf3
             parent = plate6parent2
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
             selectable = 1
-        tile3
-            parent = plate6leaf3
-            material = tile0202
-            model = models/tile.osgt
-            selectable = 1
         plate6parent3
-            parent = plate6
+            parent = source
             rotation = 0.000000 0.000000 180.000000
             selectable = 1
-        plate6leaf4
+        sourceLeaf4
             parent = plate6parent3
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
             selectable = 1
-        tile4
-            parent = plate6leaf4
-            material = tile0303
-            model = models/tile.osgt
-            selectable = 1
         plate6parent4
-            parent = plate6
+            parent = source
             rotation = 0.000000 0.000000 240.000000
             selectable = 1
-        plate6leaf5
+        sourceLeaf5
             parent = plate6parent4
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
             selectable = 1
-        tile5
-            parent = plate6leaf5
-            material = tile0101
-            model = models/tile.osgt
-            selectable = 1
         plate6parent5
-            parent = plate6
+            parent = source
             rotation = 0.000000 0.000000 300.000000
             selectable = 1
-        plate6leaf6
+        sourceLeaf6
             parent = plate6parent5
             position = 0.000000 2.500000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
-            selectable = 1
-        tile6
-            parent = plate6leaf6
-            material = tile0202
-            model = models/tile.osgt
             selectable = 1
         filter
             parent = ROOT
             material = plate3
             model = models/plate3.osgt
             script = scripts/Filter.py
-        plate3leaf1
+        filterLeaf1
             parent = filter
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
@@ -112,7 +84,7 @@ node
         plate3parent1
             parent = filter
             rotation = 0.000000 0.000000 120.000000
-        plate3leaf2
+        filterLeaf2
             parent = plate3parent1
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
@@ -122,24 +94,24 @@ node
             parent = filter
             rotation = 0.000000 0.000000 240.000000
             selectable = 1
-        plate3leaf3
+        filterLeaf3
             parent = plate3parent2
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
             selectable = 1
-        plate10
+        destination
             parent = ROOT
             position = 5.000000 0.000000 2.000000
             material = plate10
             model = models/plate10.osgt
         plate10leaf1
-            parent = plate10
+            parent = destination
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
             model = models/plateLeaf.osgt
         plate10parent1
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 36.000000
         plate10leaf2
             parent = plate10parent1
@@ -148,7 +120,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent2
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 72.000000
             selectable = 1
         plate10leaf3
@@ -158,7 +130,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent3
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 108.000000
             selectable = 1
         plate10leaf4
@@ -168,7 +140,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent4
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 144.000000
             selectable = 1
         plate10leaf5
@@ -178,7 +150,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent5
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 180.000000
             selectable = 1
         plate10leaf6
@@ -188,7 +160,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent6
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 216.000000
             selectable = 1
         plate10leaf7
@@ -198,7 +170,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent7
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 252.000000
             selectable = 1
         plate10leaf8
@@ -208,7 +180,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent8
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 288.000000
             selectable = 1
         plate10leaf9
@@ -218,7 +190,7 @@ node
             model = models/plateLeaf.osgt
             selectable = 1
         plate10parent9
-            parent = plate10
+            parent = destination
             rotation = 0.000000 0.000000 324.000000
             selectable = 1
         plate10leaf10
@@ -233,3 +205,4 @@ node
             scale = 60.000000 60.000000 1.000000
             material = ball
             model = models/box.osgt
+            script = scripts/TileFactory.py

@@ -67,7 +67,7 @@ node
             material = plate3
             model = models/plate3.osgt
             script = scripts/Filter.py
-        filterLeaf1
+        filterLeaf0
             parent = filter
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
@@ -75,7 +75,7 @@ node
         plate3parent1
             parent = filter
             rotation = 0.000000 0.000000 120.000000
-        filterLeaf2
+        filterLeaf1
             parent = plate3parent1
             position = 0.000000 2.000000 0.000000
             material = plateLeaf
@@ -83,7 +83,7 @@ node
         plate3parent2
             parent = filter
             rotation = 0.000000 0.000000 240.000000
-        filterLeaf3
+        filterLeaf2
             parent = plate3parent2
             position = 0.000000 2.000000 0.000000
             material = plateLeaf

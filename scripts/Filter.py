@@ -5,8 +5,8 @@ FILTER_ACTION_FALL      = "move.default.tileFall"
 FILTER_ACTION_ROTATE    = "rotate.default.rotateFilter"
 FILTER_LEAF_NAME        = "filterLeaf0"
 FILTER_LEAF_NAME_PREFIX = "filterLeaf"
-FILTER_LEAF_SLOT_MIN    = 1
-FILTER_LEAF_SLOT_MAX    = 2
+FILTER_LEAF_SLOT1       = 1
+FILTER_LEAF_SLOT2       = 2
 FILTER_NAME             = "filter"
 FILTER_TILE_FACTORY     = "tileFactory"
 
@@ -16,14 +16,14 @@ class FilterImpl(object):
         self.filterName = None
         self.rotationSpeed = None
         self.tiles = {}
-        for i in xrange(FILTER_LEAF_SLOT_MIN, FILTER_LEAF_SLOT_MAX + 1):
-            self.tiles[i] = None
+        self.tiles[FILTER_LEAF_SLOT1] = None
+        self.tiles[FILTER_LEAF_SLOT2] = None
         self.lastFreeSlot = None
     def __del__(self):
         self.c = None
     def onFallFinish(self, key, value):
         self.c.unlisten("$FALL.$SCENE.$NAME.active")
-        if (self.lastFreeSlot == FILTER_LEAF_SLOT_MAX):
+        if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
     def onRotationFinish(self, key, value):
         # Record old absolute position and rotation.
@@ -85,7 +85,7 @@ class FilterImpl(object):
     def validateTiles(self):
         print "validate tiles"
         self.c.setConst("NAME", self.filterName)
-        # Record all matches. SLOT:ID -> [FILTER ID]
+        # Field ID -> [matching slot IDs].
         matches = {}
         fids = self.c.get("tile.$NAME.id")
         for slot in self.tiles.keys():
@@ -94,7 +94,24 @@ class FilterImpl(object):
             ids = self.c.get("tile.$NAME.id")
             for i in xrange(0, 2):
                 for fi in xrange(0, 2):
-                    print "{0}:{1} {2} = {3}".format(slot, i, fi, ids[i] == fids[fi])
+                    #print "{0}:{1} {2} = {3}".format(slot, i, fi, ids[i] == fids[fi])
+                    if (fi not in matches):
+                        matches[fi] = []
+                    # New match.
+                    if ((ids[i] == fids[fi]) and
+                        slot not in matches[fi]):
+                        matches[fi].append(slot)
+                        print "{0} -> {1}".format(fi, slot)
+        # Slot = 1 in fi = 0, slot = 2 in fi = 1.
+        ok1021 = ((FILTER_LEAF_SLOT1 in matches[0]) and
+                  (FILTER_LEAF_SLOT2 in matches[1]))
+        # Slot = 2 in fi = 0, slot = 1 in fi = 1.
+        ok2011 = ((FILTER_LEAF_SLOT2 in matches[0]) and
+                  (FILTER_LEAF_SLOT1 in matches[1]))
+        if (ok1021 or ok2011):
+            print "Match detected"
+        else:
+            print "No match"
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):

@@ -1,4 +1,6 @@
 
+DESCRIPTION
+===========
 Filter
 1. Accept tile with 'filter.acceptTile' call
 1.1. Occupy the next available tile slot
@@ -15,4 +17,12 @@ Filter
 11. Check if there are no more free slots left
 11.1. If there are more free slots, do nothing.
 11.2. If there are no more free slots, match slot tiles with the filter one
+
+SEQUENCE FILE SAMPLE
+====================
+filter.prepareRotation = 1  // Environment call to prepare the following rotation action.
+rotate.default.rotateFilter // Rotate the filter to align with the source, wait for completion.
+filter.changeTileParent = 1 // Environment call to change tile parent.
+move.default.dropTile       // Drop the tile down to the filter, wait for completion.
+filter.matchTiles = 1       // Match tiles against the filter tile.
 

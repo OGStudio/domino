@@ -1,0 +1,18 @@
+
+Filter
+1. Accept tile with 'filter.acceptTile' call
+1.1. Occupy the next available tile slot
+1.2. Record last occupied slot
+2. Update filter rotation action with new destination rotation
+3. Start rotation action
+4. Wait for rotation action finish
+5. Record currently selected tile absolute rotation/position
+6. Change tile parent from source to filter
+7. Apply new rotation/position to keep absolute rotation/position intact after parent change
+8. Notify tile of parent plate change (source -> filter)
+9. Start fall action
+10. Wait for fall action finish
+11. Check if there are no more free slots left
+11.1. If there are more free slots, do nothing.
+11.2. If there are no more free slots, match slot tiles with the filter one
+

@@ -1,0 +1,14 @@
+code
+    default
+        updateFilterRotation
+            code = "if.... else...."
+        
+sequence
+    default
+        selectTile
+            action = !updateFilterRotation
+            action = rotateFilter
+            action = !changeTileParentAndKeepAbsolutePosRot
+            action = !notifyTileOfParentPlateChange
+            action = fallTile
+            action = !forNoMoreFreeSlotsMatchTiles

@@ -14,15 +14,15 @@ material
             normal = pipeline/textures/plate6_n.png
         plate10
             normal = pipeline/textures/plate10_n.png
-        tile0000
-            diffuse = pipeline/textures/tile_tex0000.png
+        tile00
+            diffuse = pipeline/textures/tile_tex00.png
             normal = pipeline/textures/tile_n.png
-        tile0101
-            diffuse = pipeline/textures/tile_tex0101.png
+        tile11
+            diffuse = pipeline/textures/tile_tex11.png
             normal = pipeline/textures/tile_n.png
-        tile0202
-            diffuse = pipeline/textures/tile_tex0202.png
+        tile22
+            diffuse = pipeline/textures/tile_tex22.png
             normal = pipeline/textures/tile_n.png
-        tile0303
-            diffuse = pipeline/textures/tile_tex0303.png
+        tile33
+            diffuse = pipeline/textures/tile_tex33.png
             normal = pipeline/textures/tile_n.png

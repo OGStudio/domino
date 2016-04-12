@@ -23,10 +23,8 @@ class FilterImpl(object):
         self.c = None
     def onFallFinish(self, key, value):
         self.c.unlisten("$FALL.$SCENE.$NAME.active")
-        print "onFallFinish", key, value
-        # TODO: Validate tiles.
         if (self.lastFreeSlot == FILTER_LEAF_SLOT_MAX):
-            print "validate tiles"
+            self.validateTiles()
     def onRotationFinish(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$NAME.positionAbs")[0].split(" ")
@@ -82,8 +80,21 @@ class FilterImpl(object):
         # Create 1 filter tile.
         self.filterName = self.c.get("$TF.newTile")[0]
         # Change parent to the first tile leaf.
-        self.c.setConst("TILE", self.filterName)
-        self.c.set("node.$SCENE.$TILE.parent", FILTER_LEAF_NAME)
+        self.c.setConst("NAME", self.filterName)
+        self.c.set("node.$SCENE.$NAME.parent", FILTER_LEAF_NAME)
+    def validateTiles(self):
+        print "validate tiles"
+        self.c.setConst("NAME", self.filterName)
+        # Record all matches. SLOT:ID -> [FILTER ID]
+        matches = {}
+        fids = self.c.get("tile.$NAME.id")
+        for slot in self.tiles.keys():
+            tileName = self.tiles[slot]
+            self.c.setConst("NAME", tileName)
+            ids = self.c.get("tile.$NAME.id")
+            for i in xrange(0, 2):
+                for fi in xrange(0, 2):
+                    print "{0}:{1} {2} = {3}".format(slot, i, fi, ids[i] == fids[fi])
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):

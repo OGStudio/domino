@@ -15,22 +15,25 @@ class TileFactoryImpl(object):
         self.lastTileID = 0
     def __del__(self):
         self.c = None
-    def materialName(self):
+    def id(self):
         random.seed()
         i = random.randint(TILE_MATERIAL_MIN, TILE_MATERIAL_MAX)
-        return "{0}{1:02d}{2:02d}".format(TILE_MATERIAL_PREFIX, i, i)
+        # TODO: provide 2 random numbers.
+        return [str(i), str(i)]
+    def newTile(self, key):
+        name = self.tileName()
+        id = self.id()
+        material = "{0}{1}{2}".format(TILE_MATERIAL_PREFIX, id[0], id[1])
+        self.c.setConst("NAME", name)
+        self.c.set("node.$SCENE.$NAME.parent",   "ROOT")
+        self.c.set("node.$SCENE.$NAME.model",    TILE_MODEL)
+        self.c.set("node.$SCENE.$NAME.material", material)
+        self.c.set("node.$SCENE.$NAME.script",   TILE_SCRIPT)
+        self.c.set("tile.$NAME.id",              id)
+        return [name]
     def tileName(self):
         self.lastTileID = self.lastTileID + 1
         return TILE_NAME_PREFIX + str(self.lastTileID)
-    def getNewTile(self, key):
-        name = self.tileName()
-        material = self.materialName()
-        self.c.setConst("TILE", name)
-        self.c.set("node.$SCENE.$TILE.parent",   "ROOT")
-        self.c.set("node.$SCENE.$TILE.model",    TILE_MODEL)
-        self.c.set("node.$SCENE.$TILE.material", material)
-        self.c.set("node.$SCENE.$TILE.script",   TILE_SCRIPT)
-        return [name]
 
 class TileFactory(object):
     def __init__(self, sceneName, nodeName, env):
@@ -38,7 +41,7 @@ class TileFactory(object):
         self.impl = TileFactoryImpl(self.c)
         self.c.setConst("SCENE", sceneName)
         self.c.setConst("NODE",  nodeName)
-        self.c.provide("tileFactory.newTile", None, self.impl.getNewTile)
+        self.c.provide("tileFactory.newTile", None, self.impl.newTile)
     def __del__(self):
         # Tear down.
         self.c.clear()

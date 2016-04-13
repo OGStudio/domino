@@ -36,6 +36,12 @@ class FilterImpl(object):
     def onHellFinish(self, key, value):
         self.c.setConst("NAME", key[4])
         self.c.unlisten("$HELL.$SCENE.$NAME.active")
+        # Deallocate tiles.
+        for slot in self.tiles.keys():
+            tileName = self.tiles[slot]
+            self.tiles[slot] = None
+            self.c.setConst("NAME", tileName)
+            self.c.set("node.$SCENE.$NAME.parent", "")
     def onRotationFinish(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$NAME.positionAbs")[0].split(" ")

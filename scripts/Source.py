@@ -14,6 +14,15 @@ class SourceImpl(object):
         self.tiles = {}
     def __del__(self):
         self.c = None
+    def createTile(self, slot):
+        name = self.c.get("$TF.newTile")[0]
+        # Change parent to corresponding tile leaf.
+        self.c.setConst("NAME", name)
+        parent = SOURCE_LEAF_NAME_PREFIX + str(slot)
+        self.c.set("node.$SCENE.$NAME.parent",     parent)
+        self.c.set("$TILE.$NAME.plate", SOURCE_NAME)
+        # Each tile is in its designated slot.
+        self.tiles[slot] = name
     def onPlate(self, key, value):
         tileName = key[1]
         self.c.setConst("NAME", tileName)
@@ -56,17 +65,15 @@ class SourceImpl(object):
                 point = "{0} 0 0 {1}".format(self.rotationSpeed,
                                              -90 - 60 * slot)
                 self.c.set("$ROTATE.point", point)
+    def setNewPair(self, key, value):
+        print "newPair", key, value
+        for slot, tile in self.tiles.items():
+            if (tile is None):
+                self.createTile(slot)
     def setReset(self, key, value):
         # Create 6 tiles.
-        for i in xrange(0, 6):
-            name = self.c.get("$TF.newTile")[0]
-            # Change parent to corresponding tile leaf.
-            self.c.setConst("NAME", name)
-            parent = SOURCE_LEAF_NAME_PREFIX + str(i)
-            self.c.set("node.$SCENE.$NAME.parent",     parent)
-            self.c.set("$TILE.$NAME.plate", SOURCE_NAME)
-            # Each tile is in its designated slot.
-            self.tiles[i] = name
+        for slot in xrange(0, 6):
+            self.createTile(slot)
 
 class Source(object):
     def __init__(self, sceneName, nodeName, env):
@@ -77,8 +84,9 @@ class Source(object):
         self.c.setConst("ROTATE", SOURCE_ACTION_ROTATE)
         self.c.setConst("TF",     SOURCE_TILE_FACTORY)
         self.c.setConst("TILE",   SOURCE_TILE)
-        self.c.provide("source.reset", self.impl.setReset)
         self.c.provide("source.moving")
+        self.c.provide("source.newPair", self.impl.setNewPair)
+        self.c.provide("source.reset",   self.impl.setReset)
         self.c.provide("source.selectedTile")
         # Listen to rotation.
         self.c.listen("$ROTATE.$SCENE.$NODE.active", None, self.impl.onRotation)

@@ -127,10 +127,10 @@ class FilterImpl(object):
                   (FILTER_LEAF_SLOT1 in matches[1]))
         self.lastFreeSlot = None
         if (ok1021 or ok2011):
-            print "Match detected"
+            self.c.report("filter.match", "1")
         else:
-            print "No match"
             self.clearSlots()
+            self.c.report("filter.match", "0")
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):
@@ -143,6 +143,7 @@ class Filter(object):
         self.c.setConst("ROTATE", FILTER_ACTION_ROTATE)
         self.c.setConst("TF",     FILTER_TILE_FACTORY)
         self.c.provide("filter.acceptTile", self.impl.setAcceptTile)
+        self.c.provide("filter.match")
         self.c.provide("filter.reset",      self.impl.setReset)
         # Listen to rotation finish.
         self.c.listen("$ROTATE.$SCENE.$NODE.active", "0", self.impl.onRotationFinish)

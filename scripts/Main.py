@@ -11,6 +11,10 @@ class MainImpl(object):
         self.sourceTile = None
     def __del__(self):
         self.c = None
+    def onFilterMatch(self, key, value):
+        # Failure.
+        if (value[0] == "0"):
+            self.c.set("source.newPair", "1")
     def onSourceStopped(self, key, value):
         self.c.set("filter.acceptTile", self.sourceTile)
     def onSourceTile(self, key, value):
@@ -31,6 +35,7 @@ class Main(object):
         self.c.setConst("SCENE",    sceneName)
         self.c.setConst("SOURCE",   MAIN_SOURCE_NAME)
         self.c.setConst("SNDSTART", MAIN_SOUND_START)
+        self.c.listen("filter.match",        None, self.impl.onFilterMatch)
         self.c.listen("input.SPACE.key",     "1",  self.impl.onStart)
         self.c.listen("source.moving",       "0",  self.impl.onSourceStopped)
         self.c.listen("source.selectedTile", None, self.impl.onSourceTile)

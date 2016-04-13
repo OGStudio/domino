@@ -2,6 +2,7 @@
 from pymjin2 import *
 
 FILTER_ACTION_FALL      = "move.default.tileFall"
+FILTER_ACTION_HELL      = "move.default.tileToHell"
 FILTER_ACTION_ROTATE    = "rotate.default.rotateFilter"
 FILTER_LEAF_NAME        = "filterLeaf0"
 FILTER_LEAF_NAME_PREFIX = "filterLeaf"
@@ -21,10 +22,20 @@ class FilterImpl(object):
         self.lastFreeSlot = None
     def __del__(self):
         self.c = None
+    def clearSlots(self):
+        for slot in self.tiles.keys():
+            tileName = self.tiles[slot]
+            self.c.setConst("NAME", tileName)
+            self.c.set("$HELL.$SCENE.$NAME.active", "1")
+        # Wait for the last to finish.
+        self.c.listen("$HELL.$SCENE.$NAME.active", "0", self.onHellFinish)
     def onFallFinish(self, key, value):
         self.c.unlisten("$FALL.$SCENE.$NAME.active")
         if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
+    def onHellFinish(self, key, value):
+        self.c.setConst("NAME", key[4])
+        self.c.unlisten("$HELL.$SCENE.$NAME.active")
     def onRotationFinish(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$NAME.positionAbs")[0].split(" ")
@@ -108,10 +119,12 @@ class FilterImpl(object):
         # Slot = 2 in fi = 0, slot = 1 in fi = 1.
         ok2011 = ((FILTER_LEAF_SLOT2 in matches[0]) and
                   (FILTER_LEAF_SLOT1 in matches[1]))
+        self.lastFreeSlot = None
         if (ok1021 or ok2011):
             print "Match detected"
         else:
             print "No match"
+            self.clearSlots()
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):
@@ -120,6 +133,7 @@ class Filter(object):
         self.c.setConst("SCENE",  sceneName)
         self.c.setConst("NODE",   nodeName)
         self.c.setConst("FALL",   FILTER_ACTION_FALL)
+        self.c.setConst("HELL",   FILTER_ACTION_HELL)
         self.c.setConst("ROTATE", FILTER_ACTION_ROTATE)
         self.c.setConst("TF",     FILTER_TILE_FACTORY)
         self.c.provide("filter.acceptTile", self.impl.setAcceptTile)

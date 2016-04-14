@@ -1,9 +1,9 @@
 move
     default
-        tileFall
+        transitionTile
             relative = 0
             point = 100 0 0 0
-        tileToHell
+        dropTile
             relative = 0
             point = 1000 0 0 -7
 rotate

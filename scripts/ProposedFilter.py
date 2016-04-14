@@ -11,7 +11,8 @@ FILTER_LEAF_SLOT2        = 2
 FILTER_NAME              = "filter"
 FILTER_TILE_FACTORY      = "tileFactory"
 
-FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$TILE1.active $DROP.$SCENE.$TILE2.active",
+FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$T1.active",
+                                 "$DROP.$SCENE.$T2.active",
                                  "filter.deallocateDroppedTiles"]
 FILTER_SEQUENCE_TILE_ACCEPT   = ["$ROTATE.$SCENE.$NODE.active",
                                  "filter.changeTileParent",
@@ -26,10 +27,6 @@ class FilterImpl(object):
         self.tiles = { FILTER_LEAF_SLOT1 : None,
                        FILTER_LEAF_SLOT2 : None }
         self.lastFreeSlot = None
-        self.c.set("environmentSequence.filter.failure.sequence",
-                   FILTER_SEQUENCE_MATCH_FAILURE)
-        self.c.set("environmentSequence.filter.accept.sequence",
-                   FILTER_SEQUENCE_TILE_ACCEPT)
     def __del__(self):
         self.c = None
     def prepareRotation(self, slot):
@@ -51,10 +48,10 @@ class FilterImpl(object):
                 break
         self.tiles[self.lastFreeSlot] = tileName
         self.prepareRotation(self.lastFreeSlot)
-        # Start accept sequence.
-        self.c.set("environmentSequence.filter.accept.active", "1")
-    def setChangeTileParent(self, key, value):
         self.c.setConst("TILE", tileName)
+        # Start accept sequence.
+        self.c.setSequence(FILTER_SEQUENCE_TILE_ACCEPT)
+    def setChangeTileParent(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
         vrold = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
@@ -78,6 +75,8 @@ class FilterImpl(object):
         self.c.set("node.$SCENE.$TILE.rotation", rot)
         # Notify tile of its parent plate change.
         self.c.set("tile.$TILE.plate", FILTER_NAME)
+        # Report method finish.
+        self.c.report("filter.changeTileParent", "0")
     def setDeallocateDroppedTiles(self, key, value):
         # Deallocate tiles.
         for slot in self.tiles.keys():
@@ -85,7 +84,11 @@ class FilterImpl(object):
             self.tiles[slot] = None
             self.c.setConst("TILE", tileName)
             self.c.set("node.$SCENE.$TILE.parent", "")
+        # Report method finish.
+        self.c.report("filter.deallocateDroppedTiles", "0")
     def setMatchTiles(self, key, value):
+        # Report method finish.
+        self.c.report("filter.matchTiles", "0")
         if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
     def setReset(self, key, value):
@@ -95,7 +98,6 @@ class FilterImpl(object):
         self.c.setConst("NAME", self.filterName)
         self.c.set("node.$SCENE.$NAME.parent", FILTER_LEAF_NAME)
     def validateTiles(self):
-        print "validate tiles"
         self.c.setConst("NAME", self.filterName)
         # Field ID -> [matching slot IDs].
         matches = {}
@@ -125,10 +127,10 @@ class FilterImpl(object):
             self.c.report("filter.match", "1")
         else:
             self.c.report("filter.match", "0")
-            self.c.setConst("TILE1", self.tiles[0])
-            self.c.setConst("TILE2", self.tiles[1])
+            self.c.setConst("T1", self.tiles[1])
+            self.c.setConst("T2", self.tiles[2])
             # Start failure sequence.
-            self.c.set("environmentSequence.filter.failure.active", "1")
+            self.c.setSequence(FILTER_SEQUENCE_MATCH_FAILURE)
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):

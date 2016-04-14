@@ -66,7 +66,7 @@ node
             parent = ROOT
             material = plate3
             model = models/plate3.osgt
-            script = scripts/Filter.py
+            script = scripts/ProposedFilter.py
         filterLeaf0
             parent = filter
             position = 0.000000 2.000000 0.000000

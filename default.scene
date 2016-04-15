@@ -177,3 +177,7 @@ node
             material = ball
             model = models/box.osgt
             script = scripts/TileFactory.py
+        upperShadowFixer
+            parent = ROOT
+            position = -10.000000 0.000000 7.000000
+            model = models/box.osgt

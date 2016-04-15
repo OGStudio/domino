@@ -1,11 +1,16 @@
 
 from pymjin2 import *
 
-SOURCE_ACTION_ROTATE    = "rotate.default.rotateSource"
-SOURCE_LEAF_NAME_PREFIX = "sourceLeaf"
-SOURCE_NAME             = "source"
-SOURCE_TILE             = "tile"
-SOURCE_TILE_FACTORY     = "tileFactory"
+SOURCE_ACTION_CREATE     = "move.default.createTile"
+SOURCE_ACTION_ROTATE     = "rotate.default.rotateSource"
+SOURCE_LEAF_NAME_PREFIX  = "sourceLeaf"
+SOURCE_NAME              = "source"
+SOURCE_TILE              = "tile"
+SOURCE_TILE_FACTORY      = "tileFactory"
+SOURCE_SEQUENCE_NEW_TILE = ["source.createNewTile",
+                            "$CREATE.$SCENE.$NEWTILE.active",
+                            "source.createNewTile",
+                            "$CREATE.$SCENE.$NEWTILE.active"]
 
 class SourceImpl(object):
     def __init__(self, c):
@@ -23,6 +28,7 @@ class SourceImpl(object):
         self.c.set("$TILE.$NAME.plate", SOURCE_NAME)
         # Each tile is in its designated slot.
         self.tiles[slot] = name
+        return name
     def onPlate(self, key, value):
         tileName = key[1]
         self.c.setConst("NAME", tileName)
@@ -65,11 +71,28 @@ class SourceImpl(object):
                 point = "{0} 0 0 {1}".format(self.rotationSpeed,
                                              -90 - 60 * slot)
                 self.c.set("$ROTATE.point", point)
-    def setNewPair(self, key, value):
-        print "newPair", key, value
+    def setCreateNewTile(self, key, value):
         for slot, tile in self.tiles.items():
             if (tile is None):
-                self.createTile(slot)
+                tileName = self.createTile(slot)
+                print "new tile name", tileName
+                self.c.setConst("NEWTILE", tileName)
+                break
+        # Report method finish.
+        self.c.report("source.createNewTile", "0")
+    def setNewPair(self, key, value):
+        print "newPair", key, value
+#        for slot, tile in self.tiles.items():
+#            if (tile is None):
+#                tileName = self.createTile(slot)
+#                self.c.setConst("TILE", tileName)
+#                self.c.set("$CREATE.$SCENE.$TILE.active", "1")
+#        for slot, tile in self.tiles.items():
+#            if (tile is None):
+#                tileName = self.createTile(slot)
+#                self.c.setConst("TILE", tileName)
+#                self.c.set("$CREATE.$SCENE.$TILE.active", "1")
+        self.c.setSequence(SOURCE_SEQUENCE_NEW_TILE)
     def setReset(self, key, value):
         # Create 6 tiles.
         for slot in xrange(0, 6):
@@ -81,10 +104,17 @@ class Source(object):
         self.impl = SourceImpl(self.c)
         self.c.setConst("SCENE",  sceneName)
         self.c.setConst("NODE",   nodeName)
+        self.c.setConst("CREATE", SOURCE_ACTION_CREATE)
         self.c.setConst("ROTATE", SOURCE_ACTION_ROTATE)
         self.c.setConst("TF",     SOURCE_TILE_FACTORY)
         self.c.setConst("TILE",   SOURCE_TILE)
+        # Public API.
         self.c.provide("source.moving")
+        self.c.provide("source.newPair", self.impl.setNewPair)
+        self.c.provide("source.reset",   self.impl.setReset)
+        self.c.provide("source.selectedTile")
+        # Private API.
+        self.c.provide("source.createNewTile", self.impl.setCreateNewTile)
         self.c.provide("source.newPair", self.impl.setNewPair)
         self.c.provide("source.reset",   self.impl.setReset)
         self.c.provide("source.selectedTile")

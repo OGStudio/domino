@@ -1,11 +1,15 @@
 move
     default
-        transitionTile
+        createTile
             relative = 0
-            point = 100 0 0 0
+            point = 0 0 0 5
+            point = 1000 0 0 0
         dropTile
             relative = 0
             point = 1000 0 0 -4
+        transitionTile
+            relative = 0
+            point = 100 0 0 0
 rotate
     default
         rotateFilter

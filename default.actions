@@ -5,7 +5,7 @@ move
             point = 100 0 0 0
         dropTile
             relative = 0
-            point = 1000 0 0 -7
+            point = 1000 0 0 -4
 rotate
     default
         rotateFilter

@@ -1,75 +1,34 @@
 
 from pymjin2 import *
 
-FILTER_ACTION_FALL      = "move.default.tileFall"
-FILTER_ACTION_HELL      = "move.default.tileToHell"
-FILTER_ACTION_ROTATE    = "rotate.default.rotateFilter"
-FILTER_LEAF_NAME        = "filterLeaf0"
-FILTER_LEAF_NAME_PREFIX = "filterLeaf"
-FILTER_LEAF_SLOT1       = 1
-FILTER_LEAF_SLOT2       = 2
-FILTER_NAME             = "filter"
-FILTER_TILE_FACTORY     = "tileFactory"
+FILTER_ACTION_DROP       = "move.default.dropTile"
+FILTER_ACTION_ROTATE     = "rotate.default.rotateFilter"
+FILTER_ACTION_TRANSITION = "move.default.transitionTile"
+FILTER_LEAF_NAME         = "filterLeaf0"
+FILTER_LEAF_NAME_PREFIX  = "filterLeaf"
+FILTER_LEAF_SLOT1        = 1
+FILTER_LEAF_SLOT2        = 2
+FILTER_NAME              = "filter"
+FILTER_TILE_FACTORY      = "tileFactory"
+
+FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$T1.active",
+                                 "$DROP.$SCENE.$T2.active",
+                                 "filter.deallocateDroppedTiles"]
+FILTER_SEQUENCE_TILE_ACCEPT   = ["$ROTATE.$SCENE.$NODE.active",
+                                 "filter.changeTileParent",
+                                 "$TRANSITION.$SCENE.$TILE.active",
+                                 "filter.matchTiles"]
 
 class FilterImpl(object):
     def __init__(self, c):
         self.c = c
         self.filterName = None
         self.rotationSpeed = None
-        self.tiles = {}
-        self.tiles[FILTER_LEAF_SLOT1] = None
-        self.tiles[FILTER_LEAF_SLOT2] = None
+        self.tiles = { FILTER_LEAF_SLOT1 : None,
+                       FILTER_LEAF_SLOT2 : None }
         self.lastFreeSlot = None
     def __del__(self):
         self.c = None
-    def clearSlots(self):
-        for slot in self.tiles.keys():
-            tileName = self.tiles[slot]
-            self.c.setConst("NAME", tileName)
-            self.c.set("$HELL.$SCENE.$NAME.active", "1")
-        # Wait for the last to finish.
-        self.c.listen("$HELL.$SCENE.$NAME.active", "0", self.onHellFinish)
-    def onFallFinish(self, key, value):
-        self.c.unlisten("$FALL.$SCENE.$NAME.active")
-        if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
-            self.validateTiles()
-    def onHellFinish(self, key, value):
-        self.c.setConst("NAME", key[4])
-        self.c.unlisten("$HELL.$SCENE.$NAME.active")
-        # Deallocate tiles.
-        for slot in self.tiles.keys():
-            tileName = self.tiles[slot]
-            self.tiles[slot] = None
-            self.c.setConst("NAME", tileName)
-            self.c.set("node.$SCENE.$NAME.parent", "")
-    def onRotationFinish(self, key, value):
-        # Record old absolute position and rotation.
-        vpold = self.c.get("node.$SCENE.$NAME.positionAbs")[0].split(" ")
-        vrold = self.c.get("node.$SCENE.$NAME.rotationAbs")[0].split(" ")
-        # Change parent.
-        parent = "{0}{1}".format(FILTER_LEAF_NAME_PREFIX, self.lastFreeSlot)
-        self.c.set("node.$SCENE.$NAME.parent", parent)
-        # Record new absolute position and rotation.
-        vpnew = self.c.get("node.$SCENE.$NAME.positionAbs")[0].split(" ")
-        vrnew = self.c.get("node.$SCENE.$NAME.rotationAbs")[0].split(" ")
-        # Place tile at the correct hight to make it fall.
-        # Keep its absolute position and rotation intact.
-        vpos = self.c.get("node.$SCENE.$NAME.position")[0].split(" ")
-        pos = "{0} {1} {2}".format(vpos[0],
-                                   vpos[1],
-                                   float(vpold[2]) - float(vpnew[2]))
-        self.c.set("node.$SCENE.$NAME.position", pos)
-        vrot = self.c.get("node.$SCENE.$NAME.rotation")[0].split(" ")
-        rot = "{0} {1} {2}".format(vrot[0],
-                                   vrot[1],
-                                   float(vrold[2]) - float(vrnew[2]))
-        self.c.set("node.$SCENE.$NAME.rotation", rot)
-        # Notify tile of its parent plate change.
-        self.c.set("tile.$NAME.plate", FILTER_NAME)
-        # Run fall action.
-        self.c.set("$FALL.$SCENE.$NAME.active", "1")
-        # Listen to fall finish.
-        self.c.listen("$FALL.$SCENE.$NAME.active", "0", self.onFallFinish)
     def prepareRotation(self, slot):
         # The first call.
         if (self.rotationSpeed is None):
@@ -87,12 +46,53 @@ class FilterImpl(object):
             if (self.tiles[slot] is None):
                 self.lastFreeSlot = slot
                 break
-        self.prepareRotation(self.lastFreeSlot)
-        # Rotate filter.
-        self.c.set("$ROTATE.$SCENE.$NODE.active", "1")
-        # Prepare to take the node.
         self.tiles[self.lastFreeSlot] = tileName
-        self.c.setConst("NAME", tileName)
+        self.prepareRotation(self.lastFreeSlot)
+        self.c.setConst("TILE", tileName)
+        # Start accept sequence.
+        self.c.setSequence(FILTER_SEQUENCE_TILE_ACCEPT)
+    def setChangeTileParent(self, key, value):
+        # Record old absolute position and rotation.
+        vpold = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
+        vrold = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
+        # Change parent.
+        parent = "{0}{1}".format(FILTER_LEAF_NAME_PREFIX, self.lastFreeSlot)
+        self.c.set("node.$SCENE.$TILE.parent", parent)
+        # Record new absolute position and rotation.
+        vpnew = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
+        vrnew = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
+        # Place tile at the correct hight to make it fall.
+        # Keep its absolute position and rotation intact.
+        vpos = self.c.get("node.$SCENE.$TILE.position")[0].split(" ")
+        pos = "{0} {1} {2}".format(vpos[0],
+                                   vpos[1],
+                                   float(vpold[2]) - float(vpnew[2]))
+        self.c.set("node.$SCENE.$TILE.position", pos)
+        vrot = self.c.get("node.$SCENE.$TILE.rotation")[0].split(" ")
+        rot = "{0} {1} {2}".format(vrot[0],
+                                   vrot[1],
+                                   float(vrold[2]) - float(vrnew[2]))
+        self.c.set("node.$SCENE.$TILE.rotation", rot)
+        # Notify tile of its parent plate change.
+        self.c.set("tile.$TILE.plate", FILTER_NAME)
+        # Report method finish.
+        self.c.report("filter.changeTileParent", "0")
+    def setDeallocateDroppedTiles(self, key, value):
+        # Deallocate tiles.
+        for slot in self.tiles.keys():
+            tileName = self.tiles[slot]
+            self.tiles[slot] = None
+            self.c.setConst("TILE", tileName)
+            self.c.set("node.$SCENE.$TILE.parent", "")
+        # Report method finish.
+        self.c.report("filter.deallocateDroppedTiles", "0")
+        # Report match failure.
+        self.c.report("filter.match", "0")
+    def setMatchTiles(self, key, value):
+        # Report method finish.
+        self.c.report("filter.matchTiles", "0")
+        if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
+            self.validateTiles()
     def setReset(self, key, value):
         # Create 1 filter tile.
         self.filterName = self.c.get("$TF.newTile")[0]
@@ -100,7 +100,6 @@ class FilterImpl(object):
         self.c.setConst("NAME", self.filterName)
         self.c.set("node.$SCENE.$NAME.parent", FILTER_LEAF_NAME)
     def validateTiles(self):
-        print "validate tiles"
         self.c.setConst("NAME", self.filterName)
         # Field ID -> [matching slot IDs].
         matches = {}
@@ -129,24 +128,31 @@ class FilterImpl(object):
         if (ok1021 or ok2011):
             self.c.report("filter.match", "1")
         else:
-            self.clearSlots()
-            self.c.report("filter.match", "0")
+            self.c.setConst("T1", self.tiles[1])
+            self.c.setConst("T2", self.tiles[2])
+            # Start failure sequence.
+            # Report filter.match only at the sequence end.
+            self.c.setSequence(FILTER_SEQUENCE_MATCH_FAILURE)
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):
         self.c = EnvironmentClient(env, "Filter")
         self.impl = FilterImpl(self.c)
-        self.c.setConst("SCENE",  sceneName)
-        self.c.setConst("NODE",   nodeName)
-        self.c.setConst("FALL",   FILTER_ACTION_FALL)
-        self.c.setConst("HELL",   FILTER_ACTION_HELL)
-        self.c.setConst("ROTATE", FILTER_ACTION_ROTATE)
-        self.c.setConst("TF",     FILTER_TILE_FACTORY)
+        self.c.setConst("SCENE",      sceneName)
+        self.c.setConst("NODE",       nodeName)
+        self.c.setConst("DROP",       FILTER_ACTION_DROP)
+        self.c.setConst("ROTATE",     FILTER_ACTION_ROTATE)
+        self.c.setConst("TRANSITION", FILTER_ACTION_TRANSITION)
+        self.c.setConst("TF",         FILTER_TILE_FACTORY)
+        # Public API.
         self.c.provide("filter.acceptTile", self.impl.setAcceptTile)
         self.c.provide("filter.match")
         self.c.provide("filter.reset",      self.impl.setReset)
-        # Listen to rotation finish.
-        self.c.listen("$ROTATE.$SCENE.$NODE.active", "0", self.impl.onRotationFinish)
+        # Private API.
+        self.c.provide("filter.deallocateDroppedTiles",
+                       self.impl.setDeallocateDroppedTiles)
+        self.c.provide("filter.changeTileParent", self.impl.setChangeTileParent)
+        self.c.provide("filter.matchTiles", self.impl.setMatchTiles)
     def __del__(self):
         # Tear down.
         self.c.clear()

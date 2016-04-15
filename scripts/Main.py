@@ -14,8 +14,8 @@ class MainImpl(object):
     def onFilterMatch(self, key, value):
         pass
         # Failure.
-#        if (value[0] == "0"):
-#            self.c.set("source.newPair", "1")
+        if (value[0] == "0"):
+            self.c.set("source.newPair", "1")
     def onSourceStopped(self, key, value):
         self.c.set("filter.acceptTile", self.sourceTile)
     def onSourceTile(self, key, value):

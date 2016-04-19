@@ -17,6 +17,8 @@ class SourceImpl(object):
         self.c = c
         self.rotationSpeed = None
         self.tiles = {}
+        self.c.set("esequence.source.newTile.sequence",
+                   SOURCE_SEQUENCE_NEW_TILE)
     def __del__(self):
         self.c = None
     def createTile(self, slot):
@@ -24,8 +26,8 @@ class SourceImpl(object):
         # Change parent to corresponding tile leaf.
         self.c.setConst("NAME", name)
         parent = SOURCE_LEAF_NAME_PREFIX + str(slot)
-        self.c.set("node.$SCENE.$NAME.parent",     parent)
-        self.c.set("$TILE.$NAME.plate", SOURCE_NAME)
+        self.c.set("node.$SCENE.$NAME.parent", parent)
+        self.c.set("$TILE.$NAME.plate",        SOURCE_NAME)
         # Each tile is in its designated slot.
         self.tiles[slot] = name
         return name
@@ -75,24 +77,13 @@ class SourceImpl(object):
         for slot, tile in self.tiles.items():
             if (tile is None):
                 tileName = self.createTile(slot)
-                print "new tile name", tileName
-                self.c.setConst("NEWTILE", tileName)
+                self.c.set("esequenceConst.source.newTile.NEWTILE.value",
+                           tileName)
                 break
         # Report method finish.
         self.c.report("source.createNewTile", "0")
     def setNewPair(self, key, value):
-        print "newPair", key, value
-#        for slot, tile in self.tiles.items():
-#            if (tile is None):
-#                tileName = self.createTile(slot)
-#                self.c.setConst("TILE", tileName)
-#                self.c.set("$CREATE.$SCENE.$TILE.active", "1")
-#        for slot, tile in self.tiles.items():
-#            if (tile is None):
-#                tileName = self.createTile(slot)
-#                self.c.setConst("TILE", tileName)
-#                self.c.set("$CREATE.$SCENE.$TILE.active", "1")
-        self.c.setSequence(SOURCE_SEQUENCE_NEW_TILE)
+        self.c.set("esequence.source.newTile.active", "1")
     def setReset(self, key, value):
         # Create 6 tiles.
         for slot in xrange(0, 6):
@@ -104,10 +95,14 @@ class Source(object):
         self.impl = SourceImpl(self.c)
         self.c.setConst("SCENE",  sceneName)
         self.c.setConst("NODE",   nodeName)
-        self.c.setConst("CREATE", SOURCE_ACTION_CREATE)
         self.c.setConst("ROTATE", SOURCE_ACTION_ROTATE)
         self.c.setConst("TF",     SOURCE_TILE_FACTORY)
         self.c.setConst("TILE",   SOURCE_TILE)
+        # Sequence constants.
+        self.c.set("esequenceConst.source.newTile.CREATE.value",
+                   SOURCE_ACTION_CREATE)
+        self.c.set("esequenceConst.source.newTile.SCENE.value",
+                   sceneName)
         # Public API.
         self.c.provide("source.moving")
         self.c.provide("source.newPair", self.impl.setNewPair)
@@ -115,8 +110,8 @@ class Source(object):
         self.c.provide("source.selectedTile")
         # Private API.
         self.c.provide("source.createNewTile", self.impl.setCreateNewTile)
-        self.c.provide("source.newPair", self.impl.setNewPair)
-        self.c.provide("source.reset",   self.impl.setReset)
+        self.c.provide("source.newPair",       self.impl.setNewPair)
+        self.c.provide("source.reset",         self.impl.setReset)
         self.c.provide("source.selectedTile")
         # Listen to rotation.
         self.c.listen("$ROTATE.$SCENE.$NODE.active", None, self.impl.onRotation)

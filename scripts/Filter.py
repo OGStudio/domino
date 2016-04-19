@@ -11,8 +11,8 @@ FILTER_LEAF_SLOT2        = 2
 FILTER_NAME              = "filter"
 FILTER_TILE_FACTORY      = "tileFactory"
 
-FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$T1.active",
-                                 "$DROP.$SCENE.$T2.active",
+FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$TILE1.active",
+                                 "$DROP.$SCENE.$TILE2.active",
                                  "filter.deallocateDroppedTiles"]
 FILTER_SEQUENCE_TILE_ACCEPT   = ["$ROTATE.$SCENE.$NODE.active",
                                  "filter.changeTileParent",
@@ -27,6 +27,10 @@ class FilterImpl(object):
         self.tiles = { FILTER_LEAF_SLOT1 : None,
                        FILTER_LEAF_SLOT2 : None }
         self.lastFreeSlot = None
+        self.c.set("esequence.filter.matchFailure.sequence",
+                   FILTER_SEQUENCE_MATCH_FAILURE)
+        self.c.set("esequence.filter.acceptTile.sequence",
+                   FILTER_SEQUENCE_TILE_ACCEPT)
     def __del__(self):
         self.c = None
     def prepareRotation(self, slot):
@@ -49,8 +53,9 @@ class FilterImpl(object):
         self.tiles[self.lastFreeSlot] = tileName
         self.prepareRotation(self.lastFreeSlot)
         self.c.setConst("TILE", tileName)
+        self.c.set("esequenceConst.filter.acceptTile.TILE.value", tileName)
         # Start accept sequence.
-        self.c.setSequence(FILTER_SEQUENCE_TILE_ACCEPT)
+        self.c.set("esequence.filter.acceptTile.active", "1")
     def setChangeTileParent(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
@@ -128,11 +133,13 @@ class FilterImpl(object):
         if (ok1021 or ok2011):
             self.c.report("filter.match", "1")
         else:
-            self.c.setConst("T1", self.tiles[1])
-            self.c.setConst("T2", self.tiles[2])
+            self.c.set("esequenceConst.filter.matchFailure.TILE1.value",
+                       self.tiles[1])
+            self.c.set("esequenceConst.filter.matchFailure.TILE2.value",
+                       self.tiles[2])
             # Start failure sequence.
             # Report filter.match only at the sequence end.
-            self.c.setSequence(FILTER_SEQUENCE_MATCH_FAILURE)
+            self.c.set("esequence.filter.matchFailure.active", "1")
 
 class Filter(object):
     def __init__(self, sceneName, nodeName, env):
@@ -144,6 +151,16 @@ class Filter(object):
         self.c.setConst("ROTATE",     FILTER_ACTION_ROTATE)
         self.c.setConst("TRANSITION", FILTER_ACTION_TRANSITION)
         self.c.setConst("TF",         FILTER_TILE_FACTORY)
+        # Sequence constants.
+        self.c.set("esequenceConst.filter.matchFailure.DROP.value",
+                   FILTER_ACTION_DROP)
+        self.c.set("esequenceConst.filter.matchFailure.SCENE.value", sceneName)
+        self.c.set("esequenceConst.filter.acceptTile.ROTATE.value",
+                   FILTER_ACTION_ROTATE)
+        self.c.set("esequenceConst.filter.acceptTile.TRANSITION.value",
+                   FILTER_ACTION_TRANSITION)
+        self.c.set("esequenceConst.filter.acceptTile.SCENE.value",   sceneName)
+        self.c.set("esequenceConst.filter.acceptTile.NODE.value",    nodeName)
         # Public API.
         self.c.provide("filter.acceptTile", self.impl.setAcceptTile)
         self.c.provide("filter.match")

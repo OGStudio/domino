@@ -3,6 +3,10 @@ from pymjin2 import *
 
 MAIN_SOURCE_NAME = "source"
 MAIN_SOUND_START = "soundBuffer.default.start"
+MAIN_SEQUENCE_SUCCESS = ["filter.alignToDestination",
+                         "destination.acceptTile",
+                         "filter.alignToDestination",
+                         "destination.acceptTile"]
 
 class MainImpl(object):
     def __init__(self, c):

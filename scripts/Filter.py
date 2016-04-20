@@ -11,6 +11,8 @@ FILTER_LEAF_SLOT2        = 2
 FILTER_NAME              = "filter"
 FILTER_TILE_FACTORY      = "tileFactory"
 
+FILTER_SEQUENCE_ALIGN_TO_DST  = ["filter.prepareAlignRotation",
+                                 "$ROTATE.$SCENE.$NODE.active"]
 FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$TILE1.active",
                                  "$DROP.$SCENE.$TILE2.active",
                                  "filter.deallocateDroppedTiles"]
@@ -27,6 +29,9 @@ class FilterImpl(object):
         self.tiles = { FILTER_LEAF_SLOT1 : None,
                        FILTER_LEAF_SLOT2 : None }
         self.lastFreeSlot = None
+        self.lastSuccessfulSlot = FILTER_LEAF_SLOT1
+        self.c.set("esequence.filter.alignToDestination.sequence",
+                   FILTER_SEQUENCE_ALIGN_TO_DST)
         self.c.set("esequence.filter.matchFailure.sequence",
                    FILTER_SEQUENCE_MATCH_FAILURE)
         self.c.set("esequence.filter.acceptTile.sequence",
@@ -98,6 +103,20 @@ class FilterImpl(object):
         self.c.report("filter.matchTiles", "0")
         if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
+    def setPrepareAlignRotation(self, key, value):
+        # 1 -> 2.
+        if (self.lastSuccessfulSlot == FILTER_LEAF_SLOT1):
+            self.lastSuccessfulSlot = FILTER_LEAF_SLOT2
+        # 2 -> 1. Prepare for the next round.
+        else:
+            self.lastSuccessfulSlot = FILTER_LEAF_SLOT1
+        slot = self.lastSuccessfulSlot
+        # Destination rotation = 30 + 120 * (slot - 1).
+        point = "{0} 0 0 {1}".format(self.rotationSpeed,
+                                     30 + 120 * (slot - 1))
+        self.c.set("$ROTATE.point", point)
+        # Report method finish.
+        self.c.report("filter.prepareAlignRotation", "0")
     def setReset(self, key, value):
         # Create 1 filter tile.
         self.filterName = self.c.get("$TF.newTile")[0]
@@ -166,10 +185,12 @@ class Filter(object):
         self.c.provide("filter.match")
         self.c.provide("filter.reset",      self.impl.setReset)
         # Private API.
+        self.c.provide("filter.changeTileParent", self.impl.setChangeTileParent)
         self.c.provide("filter.deallocateDroppedTiles",
                        self.impl.setDeallocateDroppedTiles)
-        self.c.provide("filter.changeTileParent", self.impl.setChangeTileParent)
         self.c.provide("filter.matchTiles", self.impl.setMatchTiles)
+        self.c.provide("filter.prepareAlignRotation",
+                       self.impl.setPrepareAlignRotation)
     def __del__(self):
         # Tear down.
         self.c.clear()

@@ -3,16 +3,17 @@ from pymjin2 import *
 
 MAIN_SOURCE_NAME = "source"
 MAIN_SOUND_START = "soundBuffer.default.start"
-MAIN_SEQUENCE_SUCCESS = ["filter.alignToDestination",
-                         "destination.acceptTile",
-                         "filter.alignToDestination",
-                         "destination.acceptTile"]
+MAIN_SEQUENCE_SUCCESS = ["esequence.filter.alignToDestination.active",
+                         "esequence.destination.acceptTile.active",
+                         "esequence.filter.alignToDestination.active",
+                         "esequence.destination.acceptTile.active"]
 
 class MainImpl(object):
     def __init__(self, c):
         self.c = c
         self.isStarted = False
         self.sourceTile = None
+        self.c.set("esequence.main.success.sequence", MAIN_SEQUENCE_SUCCESS)
     def __del__(self):
         self.c = None
     def onFilterMatch(self, key, value):
@@ -20,6 +21,9 @@ class MainImpl(object):
         # Failure.
         if (value[0] == "0"):
             self.c.set("source.newPair", "1")
+        # Success.
+        else:
+            self.c.set("esequence.main.success.active", "1")
     def onSourceStopped(self, key, value):
         self.c.set("filter.acceptTile", self.sourceTile)
     def onSourceTile(self, key, value):

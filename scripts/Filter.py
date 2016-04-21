@@ -4,6 +4,8 @@ from pymjin2 import *
 FILTER_ACTION_DROP       = "move.default.dropTile"
 FILTER_ACTION_ROTATE     = "rotate.default.rotateFilter"
 FILTER_ACTION_TRANSITION = "move.default.transitionTile"
+FILTER_ANGLE_SLOT1       = 150
+FILTER_ANGLE_SLOT2       = 30
 FILTER_LEAF_NAME         = "filterLeaf0"
 FILTER_LEAF_NAME_PREFIX  = "filterLeaf"
 FILTER_LEAF_SLOT1        = 1
@@ -104,16 +106,18 @@ class FilterImpl(object):
         if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
     def setPrepareAlignRotation(self, key, value):
+        #dstAngle = 0
         # 1 -> 2.
         if (self.lastSuccessfulSlot == FILTER_LEAF_SLOT1):
             self.lastSuccessfulSlot = FILTER_LEAF_SLOT2
+            dstAngle = FILTER_ANGLE_SLOT2
         # 2 -> 1. Prepare for the next round.
         else:
             self.lastSuccessfulSlot = FILTER_LEAF_SLOT1
+            dstAngle = FILTER_ANGLE_SLOT1
         slot = self.lastSuccessfulSlot
-        # Destination rotation = 30 + 120 * (slot - 1).
-        point = "{0} 0 0 {1}".format(self.rotationSpeed,
-                                     30 + 120 * (slot - 1))
+        point = "{0} 0 0 {1}".format(self.rotationSpeed, dstAngle)
+        print "rotate point", point
         self.c.set("$ROTATE.point", point)
         # Report method finish.
         self.c.report("filter.prepareAlignRotation", "0")

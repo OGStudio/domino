@@ -77,7 +77,7 @@ class SourceImpl(object):
         for slot, tile in self.tiles.items():
             if (tile is None):
                 tileName = self.createTile(slot)
-                self.c.set("esequenceConst.source.NEWTILE.value", tileName)
+                self.c.set("esequenceConst.NEWTILE.value", tileName)
                 break
         # Report method finish.
         self.c.report("source.createNewTile", "0")
@@ -98,8 +98,7 @@ class Source(object):
         self.c.setConst("TF",     SOURCE_TILE_FACTORY)
         self.c.setConst("TILE",   SOURCE_TILE)
         # Sequence constants.
-        self.c.set("esequenceConst.source.CREATE.value", SOURCE_ACTION_CREATE)
-        self.c.set("esequenceConst.source.SCENE.value", sceneName)
+        self.c.set("esequenceConst.CREATE.value", SOURCE_ACTION_CREATE)
         # Public API.
         self.c.provide("source.moving")
         self.c.provide("source.newPair", self.impl.setNewPair)

@@ -44,6 +44,8 @@ class Main(object):
         self.c.setConst("SCENE",    sceneName)
         self.c.setConst("SOURCE",   MAIN_SOURCE_NAME)
         self.c.setConst("SNDSTART", MAIN_SOUND_START)
+        # Sequence constants.
+        self.c.set("esequenceConst.SCENE.value", sceneName)
         self.c.listen("filter.match",        None, self.impl.onFilterMatch)
         self.c.listen("input.SPACE.key",     "1",  self.impl.onStart)
         self.c.listen("source.moving",       "0",  self.impl.onSourceStopped)

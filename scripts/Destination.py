@@ -1,9 +1,12 @@
 
 from pymjin2 import *
 
-DESTINATION_ACTION_ROTATE     = "rotate.default.rotateDestination"
-DESTINATION_LEAF_NAME_PREFIX  = "destinationLeaf"
-DESTINATION_NAME              = "destination"
+DESTINATION_ACTION_ROTATE        = "rotate.default.rotateDestination"
+DESTINATION_LEAF_NAME_PREFIX     = "destinationLeaf"
+DESTINATION_NAME                 = "destination"
+DESTINATION_SEQUENCE_TILE_ACCEPT = ["$DST_ROTATE.$SCENE.$DST_NODE.active",
+                                    "destination.changeTileParent",
+                                    "$DST_TRANSITION.$SCENE.$TILE.active"]
 
 class DestinationImpl(object):
     def __init__(self, c):

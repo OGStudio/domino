@@ -14,13 +14,13 @@ FILTER_NAME              = "filter"
 FILTER_TILE_FACTORY      = "tileFactory"
 
 FILTER_SEQUENCE_ALIGN_TO_DST  = ["filter.prepareAlignRotation",
-                                 "$ROTATE.$SCENE.$NODE.active"]
-FILTER_SEQUENCE_MATCH_FAILURE = ["$DROP.$SCENE.$TILE1.active",
-                                 "$DROP.$SCENE.$TILE2.active",
+                                 "$FILTER_ROTATE.$SCENE.$FILTER_NODE.active"]
+FILTER_SEQUENCE_MATCH_FAILURE = ["$FILTER_DROP.$SCENE.$TILE1.active",
+                                 "$FILTER_DROP.$SCENE.$TILE2.active",
                                  "filter.deallocateDroppedTiles"]
-FILTER_SEQUENCE_TILE_ACCEPT   = ["$ROTATE.$SCENE.$NODE.active",
+FILTER_SEQUENCE_TILE_ACCEPT   = ["$FILTER_ROTATE.$SCENE.$FILTER_NODE.active",
                                  "filter.changeTileParent",
-                                 "$TRANSITION.$SCENE.$TILE.active",
+                                 "$FILTER_TRANSITION.$SCENE.$TILE.active",
                                  "filter.matchTiles"]
 
 class FilterImpl(object):
@@ -60,7 +60,7 @@ class FilterImpl(object):
         self.tiles[self.lastFreeSlot] = tileName
         self.prepareRotation(self.lastFreeSlot)
         self.c.setConst("TILE", tileName)
-        self.c.set("esequenceConst.filter.TILE.value", tileName)
+        self.c.set("esequenceConst.TILE.value", tileName)
         # Start accept sequence.
         self.c.set("esequence.filter.acceptTile.active", "1")
     def setChangeTileParent(self, key, value):
@@ -156,8 +156,8 @@ class FilterImpl(object):
         if (ok1021 or ok2011):
             self.c.report("filter.match", "1")
         else:
-            self.c.set("esequenceConst.filter.TILE1.value", self.tiles[1])
-            self.c.set("esequenceConst.filter.TILE2.value", self.tiles[2])
+            self.c.set("esequenceConst.TILE1.value", self.tiles[1])
+            self.c.set("esequenceConst.TILE2.value", self.tiles[2])
             # Start failure sequence.
             # Report filter.match only at the sequence end.
             self.c.set("esequence.filter.matchFailure.active", "1")
@@ -173,14 +173,11 @@ class Filter(object):
         self.c.setConst("TRANSITION", FILTER_ACTION_TRANSITION)
         self.c.setConst("TF",         FILTER_TILE_FACTORY)
         # Sequence constants.
-        self.c.set("esequenceConst.filter.DROP.value", FILTER_ACTION_DROP)
-        self.c.set("esequenceConst.filter.SCENE.value", sceneName)
-        self.c.set("esequenceConst.filter.ROTATE.value",
-                   FILTER_ACTION_ROTATE)
-        self.c.set("esequenceConst.filter.TRANSITION.value",
+        self.c.set("esequenceConst.FILTER_DROP.value", FILTER_ACTION_DROP)
+        self.c.set("esequenceConst.FILTER_NODE.value", nodeName)
+        self.c.set("esequenceConst.FILTER_ROTATE.value", FILTER_ACTION_ROTATE)
+        self.c.set("esequenceConst.FILTER_TRANSITION.value",
                    FILTER_ACTION_TRANSITION)
-        self.c.set("esequenceConst.filter.SCENE.value",   sceneName)
-        self.c.set("esequenceConst.filter.NODE.value",    nodeName)
         # Public API.
         self.c.provide("filter.acceptTile", self.impl.setAcceptTile)
         self.c.provide("filter.match")

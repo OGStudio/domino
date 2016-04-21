@@ -94,7 +94,7 @@ node
             material = plate10
             model = models/plate10.osgt
             script = scripts/Destination.py
-        destinationLeaf1
+        destinationLeaf0
             parent = destination
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -102,7 +102,7 @@ node
         plate10parent1
             parent = destination
             rotation = 0.000000 0.000000 36.000000
-        destinationLeaf2
+        destinationLeaf1
             parent = plate10parent1
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -110,7 +110,7 @@ node
         plate10parent2
             parent = destination
             rotation = 0.000000 0.000000 72.000000
-        destinationLeaf3
+        destinationLeaf2
             parent = plate10parent2
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -118,7 +118,7 @@ node
         plate10parent3
             parent = destination
             rotation = 0.000000 0.000000 108.000000
-        destinationLeaf4
+        destinationLeaf3
             parent = plate10parent3
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -126,7 +126,7 @@ node
         plate10parent4
             parent = destination
             rotation = 0.000000 0.000000 144.000000
-        destinationLeaf5
+        destinationLeaf4
             parent = plate10parent4
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -134,7 +134,7 @@ node
         plate10parent5
             parent = destination
             rotation = 0.000000 0.000000 180.000000
-        destinationLeaf6
+        destinationLeaf5
             parent = plate10parent5
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -142,7 +142,7 @@ node
         plate10parent6
             parent = destination
             rotation = 0.000000 0.000000 216.000000
-        destinationLeaf7
+        destinationLeaf6
             parent = plate10parent6
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -150,7 +150,7 @@ node
         plate10parent7
             parent = destination
             rotation = 0.000000 0.000000 252.000000
-        destinationLeaf8
+        destinationLeaf7
             parent = plate10parent7
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -158,7 +158,7 @@ node
         plate10parent8
             parent = destination
             rotation = 0.000000 0.000000 288.000000
-        destinationLeaf9
+        destinationLeaf8
             parent = plate10parent8
             position = 0.000000 3.000000 0.000000
             material = plateLeaf
@@ -166,7 +166,7 @@ node
         plate10parent9
             parent = destination
             rotation = 0.000000 0.000000 324.000000
-        destinationLeaf10
+        destinationLeaf9
             parent = plate10parent9
             position = 0.000000 3.000000 0.000000
             material = plateLeaf

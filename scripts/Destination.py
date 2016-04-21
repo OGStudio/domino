@@ -19,6 +19,7 @@ class DestinationImpl(object):
             self.tiles[slot] = None
         self.c.set("esequence.destination.acceptTile.sequence",
                    DESTINATION_SEQUENCE_TILE_ACCEPT)
+        self.lastFreeSlot = None
     def __del__(self):
         self.c = None
 #    def onPlate(self, key, value):
@@ -46,23 +47,29 @@ class DestinationImpl(object):
 #        self.c.unlisten("$TILE.$NAME.selected")
     def setFindFreeSlot(self, key, value):
         print "findFreeSlot"
+        for slot in self.tiles.keys():
+            # Free slot.
+            if (self.tiles[slot] is None):
+                self.lastFreeSlot = slot
+                break
+        self.prepareAlignRotation(self.lastFreeSlot)
         # Report method finish.
         self.c.report("destination.findFreeSlot", "0")
 #    def onRotation(self, key, value):
 #        self.c.report("source.moving", value[0])
-    def prepareRotation(self, tileName):
+    def prepareAlignRotation(self, slot):
         # The first call.
         if (self.rotationSpeed is None):
             point = self.c.get("$ROTATE.point")[0]
             v = point.split(" ")
             # Get rotation speed from the file.
             self.rotationSpeed = int(v[0])
-#        # Destination rotation = -90 - 60 * slot.
-#        for slot, tile in self.tiles.items():
-#            if (tile == tileName):
-#                point = "{0} 0 0 {1}".format(self.rotationSpeed,
-#                                             -90 - 60 * slot)
-#                self.c.set("$ROTATE.point", point)
+        # slot 0: 90
+        # slot 1: 126
+        # Destination rotation = 90 + 36 * slot.
+        point = "{0} 0 0 {1}".format(self.rotationSpeed,
+                                     90 + 36 * self.lastFreeSlot)
+        self.c.set("$ROTATE.point", point)
 
 class Destination(object):
     def __init__(self, sceneName, nodeName, env):

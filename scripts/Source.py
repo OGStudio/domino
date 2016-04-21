@@ -106,9 +106,6 @@ class Source(object):
         self.c.provide("source.selectedTile")
         # Private API.
         self.c.provide("source.createNewTile", self.impl.setCreateNewTile)
-        self.c.provide("source.newPair",       self.impl.setNewPair)
-        self.c.provide("source.reset",         self.impl.setReset)
-        self.c.provide("source.selectedTile")
         # Listen to rotation.
         self.c.listen("$ROTATE.$SCENE.$NODE.active", None, self.impl.onRotation)
         # Listen to tile plate change.

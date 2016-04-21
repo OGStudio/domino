@@ -11,9 +11,10 @@ FILTER_LEAF_NAME_PREFIX  = "filterLeaf"
 FILTER_LEAF_SLOT1        = 1
 FILTER_LEAF_SLOT2        = 2
 FILTER_NAME              = "filter"
+FILTER_TILE              = "tile"
 FILTER_TILE_FACTORY      = "tileFactory"
 
-FILTER_SEQUENCE_ALIGN_TO_DST  = ["filter.prepareAlignRotation",
+FILTER_SEQUENCE_ALIGN_TO_DST  = ["filter.prepareAlign",
                                  "$FILTER_ROTATE.$SCENE.$FILTER_NODE.active"]
 FILTER_SEQUENCE_MATCH_FAILURE = ["$FILTER_DROP.$SCENE.$TILE1.active",
                                  "$FILTER_DROP.$SCENE.$TILE2.active",
@@ -73,16 +74,13 @@ class FilterImpl(object):
         # Record new absolute position and rotation.
         vpnew = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
         vrnew = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
-        # Place tile at the correct hight to make it fall.
         # Keep its absolute position and rotation intact.
-        vpos = self.c.get("node.$SCENE.$TILE.position")[0].split(" ")
-        pos = "{0} {1} {2}".format(vpos[0],
-                                   vpos[1],
+        pos = "{0} {1} {2}".format(float(vpold[0]) - float(vpnew[0]),
+                                   float(vpold[1]) - float(vpnew[1]),
                                    float(vpold[2]) - float(vpnew[2]))
         self.c.set("node.$SCENE.$TILE.position", pos)
-        vrot = self.c.get("node.$SCENE.$TILE.rotation")[0].split(" ")
-        rot = "{0} {1} {2}".format(vrot[0],
-                                   vrot[1],
+        rot = "{0} {1} {2}".format(float(vrold[0]) - float(vrnew[0]),
+                                   float(vrold[1]) - float(vrnew[1]),
                                    float(vrold[2]) - float(vrnew[2]))
         self.c.set("node.$SCENE.$TILE.rotation", rot)
         # Notify tile of its parent plate change.
@@ -105,7 +103,23 @@ class FilterImpl(object):
         self.c.report("filter.matchTiles", "0")
         if (self.lastFreeSlot == FILTER_LEAF_SLOT2):
             self.validateTiles()
-    def setPrepareAlignRotation(self, key, value):
+    def onPlate(self, key, value):
+        tileName = key[1]
+        self.c.setConst("NAME", tileName)
+        # We only care if tile has left us.
+        if (value[0] != FILTER_NAME):
+            return
+        # Remove reference to the tile.
+        tileSlot = None
+        for slot, tile in self.tiles.items():
+            if (tile == tileName):
+                tileSlot = slot
+                break
+        if (tileSlot is None):
+            return
+        # Remove record.
+        self.tiles[tileSlot] = None
+    def setPrepareAlign(self, key, value):
         #dstAngle = 0
         # 1 -> 2.
         if (self.lastSuccessfulSlot == FILTER_LEAF_SLOT1):
@@ -119,8 +133,10 @@ class FilterImpl(object):
         point = "{0} 0 0 {1}".format(self.rotationSpeed, dstAngle)
         print "rotate point", point
         self.c.set("$ROTATE.point", point)
+        # Provide TILE constant to Destination.
+        self.c.set("esequenceConst.TILE.value", self.tiles[slot])
         # Report method finish.
-        self.c.report("filter.prepareAlignRotation", "0")
+        self.c.report("filter.prepareAlign", "0")
     def setReset(self, key, value):
         # Create 1 filter tile.
         self.filterName = self.c.get("$TF.newTile")[0]
@@ -187,8 +203,9 @@ class Filter(object):
         self.c.provide("filter.deallocateDroppedTiles",
                        self.impl.setDeallocateDroppedTiles)
         self.c.provide("filter.matchTiles", self.impl.setMatchTiles)
-        self.c.provide("filter.prepareAlignRotation",
-                       self.impl.setPrepareAlignRotation)
+        self.c.provide("filter.prepareAlign", self.impl.setPrepareAlign)
+        # Listen to tile plate change.
+        self.c.listen("$TILE..plate", None, self.impl.onPlate)
     def __del__(self):
         # Tear down.
         self.c.clear()

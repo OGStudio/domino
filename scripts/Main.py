@@ -6,7 +6,8 @@ MAIN_SOUND_START = "soundBuffer.default.start"
 MAIN_SEQUENCE_SUCCESS = ["esequence.filter.alignToDestination.active",
                          "esequence.destination.acceptTile.active",
                          "esequence.filter.alignToDestination.active",
-                         "esequence.destination.acceptTile.active"]
+                         "esequence.destination.acceptTile.active",
+                         "source.newPair"]
 
 class MainImpl(object):
     def __init__(self, c):

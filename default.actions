@@ -14,7 +14,7 @@ rotate
     default
         rotateDestination
             relative = 0
-            point = 1000 0 0 0
+            point = 1000 0 0 90
         rotateFilter
             relative = 0
             point = 1000 0 0 0

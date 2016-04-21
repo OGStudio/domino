@@ -3,16 +3,22 @@ from pymjin2 import *
 
 DESTINATION_ACTION_ROTATE        = "rotate.default.rotateDestination"
 DESTINATION_LEAF_NAME_PREFIX     = "destinationLeaf"
+DESTINATION_LEAFS_NB             = 10
 DESTINATION_NAME                 = "destination"
-DESTINATION_SEQUENCE_TILE_ACCEPT = ["$DST_ROTATE.$SCENE.$DST_NODE.active",
-                                    "destination.changeTileParent",
-                                    "$DST_TRANSITION.$SCENE.$TILE.active"]
+DESTINATION_SEQUENCE_TILE_ACCEPT = ["destination.findFreeSlot",
+                                    "$DST_ROTATE.$SCENE.$DST_NODE.active"]
+#                                    "destination.changeTileParent",
+#                                    "$DST_TRANSITION.$SCENE.$TILE.active"]
 
 class DestinationImpl(object):
     def __init__(self, c):
         self.c = c
         self.rotationSpeed = None
         self.tiles = {}
+        for slot in xrange(0, DESTINATION_LEAFS_NB):
+            self.tiles[slot] = None
+        self.c.set("esequence.destination.acceptTile.sequence",
+                   DESTINATION_SEQUENCE_TILE_ACCEPT)
     def __del__(self):
         self.c = None
 #    def onPlate(self, key, value):
@@ -38,6 +44,10 @@ class DestinationImpl(object):
 #        self.c.set("node.$SCENE.$NAME.selectable", "0")
 #        # Do not listen to it.
 #        self.c.unlisten("$TILE.$NAME.selected")
+    def setFindFreeSlot(self, key, value):
+        print "findFreeSlot"
+        # Report method finish.
+        self.c.report("destination.findFreeSlot", "0")
 #    def onRotation(self, key, value):
 #        self.c.report("source.moving", value[0])
     def prepareRotation(self, tileName):
@@ -62,8 +72,11 @@ class Destination(object):
         self.c.setConst("NODE",   nodeName)
         self.c.setConst("ROTATE", DESTINATION_ACTION_ROTATE)
         # Sequence constants.
+        self.c.set("esequenceConst.DST_NODE.value",   nodeName)
+        self.c.set("esequenceConst.DST_ROTATE.value", DESTINATION_ACTION_ROTATE)
         # Public API.
         # Private API.
+        self.c.provide("destination.findFreeSlot", self.impl.setFindFreeSlot)
         # Listen to tile plate change.
         #self.c.listen("$TILE..plate", None, self.impl.onPlate)
     def __del__(self):

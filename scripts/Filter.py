@@ -71,24 +71,9 @@ class FilterImpl(object):
         self.c.set("esequence.filter.acceptTile.active", "1")
         print "06.filter.acceptTile", key, value
     def setChangeTileParent(self, key, value):
-        # Record old absolute position and rotation.
-        vpold = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
-        vrold = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
-        # Change parent.
+        # Change parent and keep absolute orientation intact.
         parent = "{0}{1}".format(FILTER_LEAF_NAME_PREFIX, self.lastFreeSlot)
-        self.c.set("node.$SCENE.$TILE.parent", parent)
-        # Record new absolute position and rotation.
-        vpnew = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
-        vrnew = self.c.get("node.$SCENE.$TILE.rotationAbs")[0].split(" ")
-        # Keep its absolute position and rotation intact.
-        pos = "{0} {1} {2}".format(float(vpold[0]) - float(vpnew[0]),
-                                   float(vpold[1]) - float(vpnew[1]),
-                                   float(vpold[2]) - float(vpnew[2]))
-        self.c.set("node.$SCENE.$TILE.position", pos)
-        rot = "{0} {1} {2}".format(float(vrold[0]) - float(vrnew[0]),
-                                   float(vrold[1]) - float(vrnew[1]),
-                                   float(vrold[2]) - float(vrnew[2]))
-        self.c.set("node.$SCENE.$TILE.rotation", rot)
+        self.c.set("node.$SCENE.$TILE.parentAbs", parent)
         # Notify tile of its parent plate change.
         self.c.set("tile.$TILE.plate", FILTER_NAME)
         # Report method finish.

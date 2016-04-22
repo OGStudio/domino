@@ -53,17 +53,23 @@ class FilterImpl(object):
                                      -30 - 120 * (slot - 1))
         self.c.set("$ROTATE.point", point)
     def setAcceptTile(self, key, value):
+        print "01.filter.acceptTile", key, value
         tileName = value[0]
         for slot in self.tiles.keys():
             if (self.tiles[slot] is None):
                 self.lastFreeSlot = slot
                 break
+        print "02. last free slot", self.lastFreeSlot
         self.tiles[self.lastFreeSlot] = tileName
+        print "03"
         self.prepareRotation(self.lastFreeSlot)
+        print "04"
         self.c.setConst("TILE", tileName)
         self.c.set("esequenceConst.TILE.value", tileName)
+        print "05"
         # Start accept sequence.
         self.c.set("esequence.filter.acceptTile.active", "1")
+        print "06.filter.acceptTile", key, value
     def setChangeTileParent(self, key, value):
         # Record old absolute position and rotation.
         vpold = self.c.get("node.$SCENE.$TILE.positionAbs")[0].split(" ")
@@ -107,7 +113,7 @@ class FilterImpl(object):
         tileName = key[1]
         self.c.setConst("NAME", tileName)
         # We only care if tile has left us.
-        if (value[0] != FILTER_NAME):
+        if (value[0] == FILTER_NAME):
             return
         # Remove reference to the tile.
         tileSlot = None
@@ -117,9 +123,11 @@ class FilterImpl(object):
                 break
         if (tileSlot is None):
             return
+        print "filter removes slot", tileSlot
         # Remove record.
         self.tiles[tileSlot] = None
     def setPrepareAlign(self, key, value):
+        print "filter prepareAlign"
         #dstAngle = 0
         # 1 -> 2.
         if (self.lastSuccessfulSlot == FILTER_LEAF_SLOT1):
@@ -188,6 +196,7 @@ class Filter(object):
         self.c.setConst("ROTATE",     FILTER_ACTION_ROTATE)
         self.c.setConst("TRANSITION", FILTER_ACTION_TRANSITION)
         self.c.setConst("TF",         FILTER_TILE_FACTORY)
+        self.c.setConst("TILE",       FILTER_TILE)
         # Sequence constants.
         self.c.set("esequenceConst.FILTER_DROP.value", FILTER_ACTION_DROP)
         self.c.set("esequenceConst.FILTER_NODE.value", nodeName)

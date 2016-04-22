@@ -18,7 +18,7 @@ class MainImpl(object):
     def __del__(self):
         self.c = None
     def onFilterMatch(self, key, value):
-        pass
+        print "onFilterMatch", key, value
         # Failure.
         if (value[0] == "0"):
             self.c.set("source.newPair", "1")

@@ -4,10 +4,11 @@ from pymjin2 import *
 FILTER_ACTION_DROP       = "move.default.dropTile"
 FILTER_ACTION_ROTATE     = "rotate.default.rotateFilter"
 FILTER_ACTION_TRANSITION = "move.default.transitionTile"
-FILTER_ANGLE_SLOT1       = 150
-FILTER_ANGLE_SLOT2       = 30
+#FILTER_ANGLE_SLOT1       = 150
+#FILTER_ANGLE_SLOT2       = 30
 FILTER_LEAF_NAME         = "filterLeaf0"
 FILTER_LEAF_NAME_PREFIX  = "filterLeaf"
+FILTER_LEAF_FILTER       = 0
 FILTER_LEAF_SLOT1        = 1
 FILTER_LEAF_SLOT2        = 2
 FILTER_NAME              = "filter"
@@ -16,6 +17,8 @@ FILTER_TILE_FACTORY      = "tileFactory"
 
 FILTER_SEQUENCE_ALIGN_TO_DST  = ["filter.prepareAlign",
                                  "$FILTER_ROTATE.$SCENE.$FILTER_NODE.active"]
+FILTER_SEQUENCE_ALIGN_TO_DST_BY_FILTER = ["filter.prepareFilterAlign",
+                                          "$FILTER_ROTATE.$SCENE.$FILTER_NODE.active"]
 FILTER_SEQUENCE_MATCH_FAILURE = ["$FILTER_DROP.$SCENE.$TILE1.active",
                                  "$FILTER_DROP.$SCENE.$TILE2.active",
                                  "filter.deallocateDroppedTiles"]
@@ -35,41 +38,46 @@ class FilterImpl(object):
         self.lastSuccessfulSlot = FILTER_LEAF_SLOT1
         self.c.set("esequence.filter.alignToDestination.sequence",
                    FILTER_SEQUENCE_ALIGN_TO_DST)
+        self.c.set("esequence.filter.alignToDestinationByFilter.sequence",
+                   FILTER_SEQUENCE_ALIGN_TO_DST_BY_FILTER)
         self.c.set("esequence.filter.matchFailure.sequence",
                    FILTER_SEQUENCE_MATCH_FAILURE)
         self.c.set("esequence.filter.acceptTile.sequence",
                    FILTER_SEQUENCE_TILE_ACCEPT)
     def __del__(self):
         self.c = None
-    def prepareRotation(self, slot):
-        # The first call.
+    def prepareRotationDst(self, slot):
+	self.prepareRotationSpeed()
+	# Destination rotation = 150 - 120 * (slot - 1)
+	# 1: 150
+	# 2: 30
+        point = "{0} 0 0 {1}".format(self.rotationSpeed,
+                                     150 - 120 * (slot - 1))
+        self.c.set("$ROTATE.point", point)
+    def prepareRotationSpeed(self):
         if (self.rotationSpeed is None):
             point = self.c.get("$ROTATE.point")[0]
             v = point.split(" ")
             # Get rotation speed from the file.
             self.rotationSpeed = int(v[0])
+    def prepareRotationSrc(self, slot):
+	self.prepareRotationSpeed()
         # Destination rotation = -30 - 120 * (slot - 1).
         point = "{0} 0 0 {1}".format(self.rotationSpeed,
                                      -30 - 120 * (slot - 1))
         self.c.set("$ROTATE.point", point)
     def setAcceptTile(self, key, value):
-        print "01.filter.acceptTile", key, value
         tileName = value[0]
         for slot in self.tiles.keys():
             if (self.tiles[slot] is None):
                 self.lastFreeSlot = slot
                 break
-        print "02. last free slot", self.lastFreeSlot
         self.tiles[self.lastFreeSlot] = tileName
-        print "03"
-        self.prepareRotation(self.lastFreeSlot)
-        print "04"
+        self.prepareRotationSrc(self.lastFreeSlot)
         self.c.setConst("TILE", tileName)
         self.c.set("esequenceConst.TILE.value", tileName)
-        print "05"
         # Start accept sequence.
         self.c.set("esequence.filter.acceptTile.active", "1")
-        print "06.filter.acceptTile", key, value
     def setChangeTileParent(self, key, value):
         # Change parent and keep absolute orientation intact.
         parent = "{0}{1}".format(FILTER_LEAF_NAME_PREFIX, self.lastFreeSlot)
@@ -112,24 +120,22 @@ class FilterImpl(object):
         # Remove record.
         self.tiles[tileSlot] = None
     def setPrepareAlign(self, key, value):
-        print "filter prepareAlign"
-        #dstAngle = 0
         # 1 -> 2.
         if (self.lastSuccessfulSlot == FILTER_LEAF_SLOT1):
             self.lastSuccessfulSlot = FILTER_LEAF_SLOT2
-            dstAngle = FILTER_ANGLE_SLOT2
         # 2 -> 1. Prepare for the next round.
         else:
             self.lastSuccessfulSlot = FILTER_LEAF_SLOT1
-            dstAngle = FILTER_ANGLE_SLOT1
         slot = self.lastSuccessfulSlot
-        point = "{0} 0 0 {1}".format(self.rotationSpeed, dstAngle)
-        print "rotate point", point
-        self.c.set("$ROTATE.point", point)
+        self.prepareRotationDst(slot)
         # Provide TILE constant to Destination.
         self.c.set("esequenceConst.TILE.value", self.tiles[slot])
         # Report method finish.
         self.c.report("filter.prepareAlign", "0")
+    def setPrepareFilterAlign(self, key, value):
+        self.prepareRotationDst(FILTER_LEAF_FILTER)
+        # Report method finish.
+        self.c.report("filter.prepareFilterAlign", "0")
     def setReset(self, key, value):
         # Create 1 filter tile.
         self.filterName = self.c.get("$TF.newTile")[0]
@@ -198,6 +204,7 @@ class Filter(object):
                        self.impl.setDeallocateDroppedTiles)
         self.c.provide("filter.matchTiles", self.impl.setMatchTiles)
         self.c.provide("filter.prepareAlign", self.impl.setPrepareAlign)
+        self.c.provide("filter.filterAlign", self.impl.setPrepareFilterAlign)
         # Listen to tile plate change.
         self.c.listen("$TILE..plate", None, self.impl.onPlate)
     def __del__(self):

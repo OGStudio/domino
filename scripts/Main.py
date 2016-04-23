@@ -3,20 +3,32 @@ from pymjin2 import *
 
 MAIN_SOURCE_NAME = "source"
 MAIN_SOUND_START = "soundBuffer.default.start"
+MAIN_SEQUENCE_CHANGE_FILTER = ["destination.makeTilesNotSelectable",
+                               "esequence.filter.alignToDestinationByFilter.active",
+                               "esequence.destination.alignToFilterByFreeSlot.active"]
+#                               "esequence.destination.acceptTile.active",
+#                               "esequence.destination.alignToFilterBySelectedTile.active",
+#                               "filter.acceptTile"]
 MAIN_SEQUENCE_SUCCESS = ["esequence.filter.alignToDestination.active",
                          "esequence.destination.acceptTile.active",
                          "esequence.filter.alignToDestination.active",
                          "esequence.destination.acceptTile.active",
-                         "source.newPair"]
+                         "source.newPair",
+                         "destination.makeTilesSelectable"]
 
 class MainImpl(object):
     def __init__(self, c):
         self.c = c
         self.isStarted = False
         self.sourceTile = None
+        self.c.set("esequence.main.changeFilter.sequence",
+                   MAIN_SEQUENCE_CHANGE_FILTER)
         self.c.set("esequence.main.success.sequence", MAIN_SEQUENCE_SUCCESS)
     def __del__(self):
         self.c = None
+    def onDestinationTile(self, key, value):
+        print "onDestinationTile", key, value
+        self.c.set("esequence.main.changeFilter.active", "1")
     def onFilterMatch(self, key, value):
         print "onFilterMatch", key, value
         # Failure.
@@ -29,6 +41,7 @@ class MainImpl(object):
         self.c.set("filter.acceptTile", self.sourceTile)
     def onSourceTile(self, key, value):
         self.sourceTile = value[0]
+        self.c.set("destination.makeTilesNotSelectable", "1")
     def onStart(self, key, value):
         if (self.isStarted):
             return
@@ -51,6 +64,9 @@ class Main(object):
         self.c.listen("input.SPACE.key",     "1",  self.impl.onStart)
         self.c.listen("source.moving",       "0",  self.impl.onSourceStopped)
         self.c.listen("source.selectedTile", None, self.impl.onSourceTile)
+        self.c.listen("destination.selectedTile",
+                      None,
+                      self.impl.onDestinationTile)
     def __del__(self):
         # Tear down.
         self.c.clear()

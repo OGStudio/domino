@@ -56,7 +56,6 @@ class SourceImpl(object):
     def onRotation(self, key, value):
         self.c.report("source.moving", value[0])
     def onTileSelection(self, key, value):
-        print "onTileSelection", key, value
         tileName = key[1]
         self.prepareRotation(tileName)
         self.c.set("$ROTATE.$SCENE.$NODE.active", "1")

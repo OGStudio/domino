@@ -17,13 +17,34 @@ class DestinationImpl(object):
         self.rotationSpeed = None
         self.tiles = {}
         for slot in xrange(0, DESTINATION_LEAFS_NB):
-            print "dst tile slot {0} set to None".format(slot)
             self.tiles[slot] = None
         self.c.set("esequence.destination.acceptTile.sequence",
                    DESTINATION_SEQUENCE_TILE_ACCEPT)
         self.lastFreeSlot = None
     def __del__(self):
         self.c = None
+    def onPlate(self, key, value):
+        tileName = key[1]
+        self.c.setConst("NAME", tileName)
+        # Tile has come to us.
+        if (value[0] == DESTINATION_NAME):
+            self.c.listen("tile.$NAME.selected", "1", self.onTileSelection)
+            return
+        # Tile has left somebody. Find slot if us.
+        tileSlot = None
+        for slot, tile in self.tiles.items():
+            if (tile == tileName):
+                tileSlot = slot
+                break
+        if (tileSlot is None):
+            return
+        # Remove record.
+        self.tiles[tileSlot] = None
+        # Do not listen to it.
+        self.c.unlisten("tile.$NAME.selected")
+    def onTileSelection(self, key, value):
+        tileName = key[1]
+        self.c.report("destination.selectedTile", tileName)
     def setChangeTileParent(self, key, value):
         # Change parent and keep absolute orientation intact.
         parent = "{0}{1}".format(DESTINATION_LEAF_NAME_PREFIX, self.lastFreeSlot)
@@ -47,6 +68,11 @@ class DestinationImpl(object):
         self.prepareAlignRotation(self.lastFreeSlot)
         # Report method finish.
         self.c.report("destination.findFreeSlot", "0")
+    def setMakeTilesNotSelectable(self, key, value):
+        for slot, tile in self.tiles.items():
+            if (tile is not None):
+                self.c.setConst("TILE", tile)
+                self.c.set("node.$SCENE.$TILE.selectable", "0")
     def prepareAlignRotation(self, slot):
         # The first call.
         if (self.rotationSpeed is None):
@@ -58,6 +84,11 @@ class DestinationImpl(object):
         point = "{0} 0 0 {1}".format(self.rotationSpeed,
                                      90 - 36 * slot)
         self.c.set("$ROTATE.point", point)
+    def setMakeTilesSelectable(self, key, value):
+        for slot, tile in self.tiles.items():
+            if (tile is not None):
+                self.c.setConst("TILE", tile)
+                self.c.set("node.$SCENE.$TILE.selectable", "1")
 
 class Destination(object):
     def __init__(self, sceneName, nodeName, env):
@@ -76,8 +107,13 @@ class Destination(object):
         self.c.provide("destination.changeTileParent",
                        self.impl.setChangeTileParent)
         self.c.provide("destination.findFreeSlot", self.impl.setFindFreeSlot)
+        self.c.provide("destination.selectedTile")
+        self.c.provide("destination.makeTilesSelectable",
+                       self.impl.setMakeTilesSelectable)
+        self.c.provide("destination.makeTilesNotSelectable",
+                       self.impl.setMakeTilesNotSelectable)
         # Listen to tile plate change.
-        #self.c.listen("$TILE..plate", None, self.impl.onPlate)
+        self.c.listen("tile..plate", None, self.impl.onPlate)
     def __del__(self):
         # Tear down.
         self.c.clear()

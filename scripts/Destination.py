@@ -6,8 +6,11 @@ DESTINATION_ACTION_TRANSITION    = "move.default.transitionTile"
 DESTINATION_LEAF_NAME_PREFIX     = "destinationLeaf"
 DESTINATION_LEAFS_NB             = 10
 DESTINATION_NAME                 = "destination"
+DESTINATION_SEQUENCE_ALIGN_TO_FILTER = ["destination.findFreeSlot",
+                                        "$DST_ROTATE.$SCENE.$DST_NODE.active"]
 DESTINATION_SEQUENCE_TILE_ACCEPT = ["destination.findFreeSlot",
                                     "$DST_ROTATE.$SCENE.$DST_NODE.active",
+                                    "destination.getTile",
                                     "destination.changeTileParent",
                                     "$DST_TRANSITION.$SCENE.$TILE.active"]
 
@@ -20,6 +23,8 @@ class DestinationImpl(object):
             self.tiles[slot] = None
         self.c.set("esequence.destination.acceptTile.sequence",
                    DESTINATION_SEQUENCE_TILE_ACCEPT)
+        self.c.set("esequence.destination.alignToFilterByFreeSlot.sequence",
+                   DESTINATION_SEQUENCE_ALIGN_TO_FILTER)
         self.lastFreeSlot = None
     def __del__(self):
         self.c = None
@@ -54,25 +59,28 @@ class DestinationImpl(object):
         # Report method finish.
         self.c.report("destination.changeTileParent", "0")
     def setFindFreeSlot(self, key, value):
-        print "find free slot"
         for slot in self.tiles.keys():
-            print "checking slot", slot
             # Free slot.
             if (self.tiles[slot] is None):
                 self.lastFreeSlot = slot
                 break
-        print "dst last free slot", slot
-        tileName = self.c.get("esequenceConst.TILE.value")[0]
-        self.c.setConst("TILE", tileName)
-        self.tiles[slot] = tileName
+        print "dst last free slot", self.lastFreeSlot
         self.prepareAlignRotation(self.lastFreeSlot)
         # Report method finish.
         self.c.report("destination.findFreeSlot", "0")
+    def setGetTile(self, key, value):
+        tileName = self.c.get("esequenceConst.TILE.value")[0]
+        self.c.setConst("TILE", tileName)
+        self.tiles[self.lastFreeSlot] = tileName
+        # Method finish.
+        self.c.report("destination.getTile", "0")
     def setMakeTilesNotSelectable(self, key, value):
         for slot, tile in self.tiles.items():
             if (tile is not None):
                 self.c.setConst("TILE", tile)
                 self.c.set("node.$SCENE.$TILE.selectable", "0")
+        # Method finish.
+        self.c.report("destination.makeTilesNotSelectable", "0")
     def prepareAlignRotation(self, slot):
         # The first call.
         if (self.rotationSpeed is None):
@@ -89,6 +97,8 @@ class DestinationImpl(object):
             if (tile is not None):
                 self.c.setConst("TILE", tile)
                 self.c.set("node.$SCENE.$TILE.selectable", "1")
+        # Method finish.
+        self.c.report("destination.makeTilesSelectable", "0")
 
 class Destination(object):
     def __init__(self, sceneName, nodeName, env):
@@ -107,6 +117,7 @@ class Destination(object):
         self.c.provide("destination.changeTileParent",
                        self.impl.setChangeTileParent)
         self.c.provide("destination.findFreeSlot", self.impl.setFindFreeSlot)
+        self.c.provide("destination.getTile", self.impl.setGetTile)
         self.c.provide("destination.selectedTile")
         self.c.provide("destination.makeTilesSelectable",
                        self.impl.setMakeTilesSelectable)

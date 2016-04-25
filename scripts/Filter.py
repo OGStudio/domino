@@ -204,7 +204,7 @@ class Filter(object):
                        self.impl.setDeallocateDroppedTiles)
         self.c.provide("filter.matchTiles", self.impl.setMatchTiles)
         self.c.provide("filter.prepareAlign", self.impl.setPrepareAlign)
-        self.c.provide("filter.filterAlign", self.impl.setPrepareFilterAlign)
+        self.c.provide("filter.prepareFilterAlign", self.impl.setPrepareFilterAlign)
         # Listen to tile plate change.
         self.c.listen("$TILE..plate", None, self.impl.onPlate)
     def __del__(self):

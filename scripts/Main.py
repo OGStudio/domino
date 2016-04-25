@@ -5,10 +5,9 @@ MAIN_SOURCE_NAME = "source"
 MAIN_SOUND_START = "soundBuffer.default.start"
 MAIN_SEQUENCE_CHANGE_FILTER = ["destination.makeTilesNotSelectable",
                                "esequence.filter.alignToDestinationByFilter.active",
-                               "esequence.destination.alignToFilterByFreeSlot.active"]
-#                               "esequence.destination.acceptTile.active",
-#                               "esequence.destination.alignToFilterBySelectedTile.active",
-#                               "filter.acceptTile"]
+                               "esequence.destination.acceptTile.active",
+                               "esequence.destination.alignToFilterBySelectedTile.active",
+                               "esequence.filter.acceptFilter.active"]
 MAIN_SEQUENCE_SUCCESS = ["esequence.filter.alignToDestination.active",
                          "esequence.destination.acceptTile.active",
                          "esequence.filter.alignToDestination.active",

@@ -26,6 +26,8 @@ FILTER_SEQUENCE_TILE_ACCEPT   = ["$FILTER_ROTATE.$SCENE.$FILTER_NODE.active",
                                  "filter.changeTileParent",
                                  "$FILTER_TRANSITION.$SCENE.$TILE.active",
                                  "filter.matchTiles"]
+FILTER_SEQUENCE_ACCEPT_FILTER = ["filter.changeFilterParent",
+                                 "$FILTER_TRANSITION.$SCENE.$TILE.active"]
 
 class FilterImpl(object):
     def __init__(self, c):
@@ -44,6 +46,8 @@ class FilterImpl(object):
                    FILTER_SEQUENCE_MATCH_FAILURE)
         self.c.set("esequence.filter.acceptTile.sequence",
                    FILTER_SEQUENCE_TILE_ACCEPT)
+        self.c.set("esequence.filter.acceptFilter.sequence",
+                   FILTER_SEQUENCE_ACCEPT_FILTER)
     def __del__(self):
         self.c = None
     def prepareRotationDst(self, slot):
@@ -78,6 +82,20 @@ class FilterImpl(object):
         self.c.set("esequenceConst.TILE.value", tileName)
         # Start accept sequence.
         self.c.set("esequence.filter.acceptTile.active", "1")
+    def setChangeFilterParent(self, key, value):
+        print "01. setChangeFilterParent", key, value
+        tileName = self.c.get("esequenceConst.TILE.value")[0]
+        self.c.setConst("TILE", tileName)
+        self.filterName = tileName
+        print "02. setChangeFilterParent", key, value
+        # Change parent and keep absolute orientation intact.
+        self.c.set("node.$SCENE.$TILE.parentAbs", FILTER_LEAF_NAME)
+        print "03. setChangeFilterParent", key, value
+        # Notify tile of its parent plate change.
+        self.c.set("tile.$TILE.plate", FILTER_NAME)
+        print "04. setChangeFilterParent", key, value
+        # Report method finish.
+        self.c.report("filter.changeFilterParent", "0")
     def setChangeTileParent(self, key, value):
         # Change parent and keep absolute orientation intact.
         parent = "{0}{1}".format(FILTER_LEAF_NAME_PREFIX, self.lastFreeSlot)
@@ -115,6 +133,9 @@ class FilterImpl(object):
                 tileSlot = slot
                 break
         if (tileSlot is None):
+            if (self.filterName == tileName):
+                print "filter removes filter tile"
+                self.filterName = None
             return
         print "filter removes slot", tileSlot
         # Remove record.
@@ -134,6 +155,8 @@ class FilterImpl(object):
         self.c.report("filter.prepareAlign", "0")
     def setPrepareFilterAlign(self, key, value):
         self.prepareRotationDst(FILTER_LEAF_FILTER)
+        # Provide TILE constant to Destination.
+        self.c.set("esequenceConst.TILE.value", self.filterName)
         # Report method finish.
         self.c.report("filter.prepareFilterAlign", "0")
     def setReset(self, key, value):
@@ -199,6 +222,7 @@ class Filter(object):
         self.c.provide("filter.match")
         self.c.provide("filter.reset",      self.impl.setReset)
         # Private API.
+        self.c.provide("filter.changeFilterParent", self.impl.setChangeFilterParent)
         self.c.provide("filter.changeTileParent", self.impl.setChangeTileParent)
         self.c.provide("filter.deallocateDroppedTiles",
                        self.impl.setDeallocateDroppedTiles)

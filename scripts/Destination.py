@@ -6,8 +6,8 @@ DESTINATION_ACTION_TRANSITION    = "move.default.transitionTile"
 DESTINATION_LEAF_NAME_PREFIX     = "destinationLeaf"
 DESTINATION_LEAFS_NB             = 10
 DESTINATION_NAME                 = "destination"
-DESTINATION_SEQUENCE_ALIGN_TO_FILTER = ["destination.findFreeSlot",
-                                        "$DST_ROTATE.$SCENE.$DST_NODE.active"]
+DESTINATION_SEQUENCE_ALIGN_BY_SELECTED_TILE = ["destination.prepareAlignToFilterBySelected",
+                                               "$DST_ROTATE.$SCENE.$DST_NODE.active"]
 DESTINATION_SEQUENCE_TILE_ACCEPT = ["destination.findFreeSlot",
                                     "$DST_ROTATE.$SCENE.$DST_NODE.active",
                                     "destination.getTile",
@@ -23,9 +23,10 @@ class DestinationImpl(object):
             self.tiles[slot] = None
         self.c.set("esequence.destination.acceptTile.sequence",
                    DESTINATION_SEQUENCE_TILE_ACCEPT)
-        self.c.set("esequence.destination.alignToFilterByFreeSlot.sequence",
-                   DESTINATION_SEQUENCE_ALIGN_TO_FILTER)
+        self.c.set("esequence.destination.alignToFilterBySelectedTile.sequence",
+                   DESTINATION_SEQUENCE_ALIGN_BY_SELECTED_TILE)
         self.lastFreeSlot = None
+        self.lastSelectedTile = None
     def __del__(self):
         self.c = None
     def onPlate(self, key, value):
@@ -36,11 +37,7 @@ class DestinationImpl(object):
             self.c.listen("tile.$NAME.selected", "1", self.onTileSelection)
             return
         # Tile has left somebody. Find slot if us.
-        tileSlot = None
-        for slot, tile in self.tiles.items():
-            if (tile == tileName):
-                tileSlot = slot
-                break
+        tileSlot = self.tileNameToSlot(tileName)
         if (tileSlot is None):
             return
         # Remove record.
@@ -49,6 +46,7 @@ class DestinationImpl(object):
         self.c.unlisten("tile.$NAME.selected")
     def onTileSelection(self, key, value):
         tileName = key[1]
+        self.lastSelectedTile = tileName
         self.c.report("destination.selectedTile", tileName)
     def setChangeTileParent(self, key, value):
         # Change parent and keep absolute orientation intact.
@@ -81,6 +79,12 @@ class DestinationImpl(object):
                 self.c.set("node.$SCENE.$TILE.selectable", "0")
         # Method finish.
         self.c.report("destination.makeTilesNotSelectable", "0")
+    def prepareAlignToFilterBySelected(self, key, value):
+        slot = self.tileNameToSlot(self.lastSelectedTile)
+        self.c.set("esequenceConst.TILE.value", self.lastSelectedTile)
+        self.prepareAlignRotation(slot)
+        # Method finish.
+        self.c.report("destination.prepareAlignToFilterBySelected", "0")
     def prepareAlignRotation(self, slot):
         # The first call.
         if (self.rotationSpeed is None):
@@ -99,6 +103,10 @@ class DestinationImpl(object):
                 self.c.set("node.$SCENE.$TILE.selectable", "1")
         # Method finish.
         self.c.report("destination.makeTilesSelectable", "0")
+    def tileNameToSlot(self, name):
+        for slot, tile in self.tiles.items():
+            if (tile == name):
+                return slot
 
 class Destination(object):
     def __init__(self, sceneName, nodeName, env):
@@ -118,6 +126,8 @@ class Destination(object):
                        self.impl.setChangeTileParent)
         self.c.provide("destination.findFreeSlot", self.impl.setFindFreeSlot)
         self.c.provide("destination.getTile", self.impl.setGetTile)
+        self.c.provide("destination.prepareAlignToFilterBySelected",
+                       self.impl.prepareAlignToFilterBySelected)
         self.c.provide("destination.selectedTile")
         self.c.provide("destination.makeTilesSelectable",
                        self.impl.setMakeTilesSelectable)
